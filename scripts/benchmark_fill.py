@@ -62,10 +62,13 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             if not 50<=entry_count<=55:
                 raise AssertionError('Generated grid violates 50–55 entry contract')
             started=time.monotonic()
-            # Phase 1: prove a complete fill exists, without vocabulary constraints.
+            # Phase 1: prefer common entries for Lufz to limit branching.
+            # Keep CMUdict baseline unchanged for a controlled comparison.
             try:
                 baseline,feasibility_nodes=fill(
                     pattern,dictionary,seed=trial_seed,max_nodes=budget,
+                    word_scores=scores if scored_dictionary else None,
+                    min_score=exception_floor if scored_dictionary else None,
                     solver='backtracking')
             except RuntimeError as exc:
                 trials.append({'seed':trial_seed,'status':'unfilled','entries':entry_count,
