@@ -25,7 +25,7 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install cmudict wordfreq
       - name: Run benchmark (report is uploaded even if fill fails)
-        run: python scripts/benchmark_fill.py --seed "${{ inputs.seed }}" --max-nodes "${{ inputs.max_nodes }}" --report fill-benchmark.json
+        run: python scripts/benchmark_fill.py --seed "${{ inputs.seed }}" --max-nodes "${{ inputs.max_nodes }}" --min-frequency "${{ inputs.min_frequency }}" --report fill-benchmark.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
