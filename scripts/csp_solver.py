@@ -67,7 +67,8 @@ def solve_csp(slots, words_by_length, scores=None, preferred_score=None,
                 return None
         i=min((i for i in range(len(ds)) if i not in assigned),
               key=lambda i:(len(ds[i]),-len(neighbors[i]),i))
-        options=sorted(ds[i],key=lambda w:(-scores.get(w,0),w) if scores is not None else (w,))
+        order=ranking_scores if ranking_scores is not None else scores
+        options=sorted(ds[i],key=lambda w:(-order.get(w,0),w) if order is not None else (w,))
         for word in options:
             rare=(max_exceptions is not None and scores.get(word,0)<preferred_score)
             if rare and rare_used>=max_exceptions:
