@@ -25,8 +25,8 @@ def metrics(grid):
                     for r in range(N) for c in range(N))
     block_count = N*N - len(white)
     # Soft preferences: do not reject a valid grid for a statistical outlier.
-    score = (long_excess*4 + three*8 + abs(len(entries)-28)*5
-             + abs(across-down)*3 + abs(crossing_ratio-0.5)*20)
+    score = (long_excess*4 + three*16 + abs(len(entries)-28)*10
+             + abs(across-down)*7 + abs(crossing_ratio-0.35)*20)
     return {'score': round(score, 3), 'entries': len(entries),
             'across': across, 'down': down, 'across_down_difference': abs(across-down),
             'length_distribution': distribution, 'three_letter_entries': three,
