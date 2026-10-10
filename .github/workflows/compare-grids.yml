@@ -1,0 +1,45 @@
+name: Compare British cryptic grids
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'scripts/**'
+      - 'data/reference-grids.json'
+      - '.github/workflows/compare-grids.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compare 100 independent generated grids
+        run: |
+          python scripts/compare_grid_quality.py --samples 100 --output grid-comparison.json
+          python - <<'PY'
+          import json
+          r=json.load(open('grid-comparison.json'))
+          print('References:',r['reference_count'],'Generated:',r['generated_count'])
+          for metric in r['references']:
+              print(metric,'reference:',r['references'][metric],'generated:',r['generated'][metric])
+          with open('grid-comparison-summary.md','w') as f:
+              f.write('# Grid quality comparison\n\n')
+              f.write(f"References: {r['reference_count']}; generated grids: {r['generated_count']}\n\n")
+              f.write('| Measure | Published reference mean | Generated mean |\n|---|---:|---:|\n')
+              for key in r['references']:
+                  f.write(f"| {key} | {r['references'][key]['mean']} | {r['generated'][key]['mean']} |\n")
+          PY
+          cat grid-comparison-summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: grid-comparison
+          path: |
+            grid-comparison.json
+            grid-comparison-summary.md
+          if-no-files-found: warn
