@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "principle": "Examples illustrate transferable creative decisions, not mandatory templates.",
+  "examples": [
+    {
+      "id": "sot-os-peak",
+      "clue": "Lush large visor, as it were (2,2,5)",
+      "answer": "SO TO SPEAK",
+      "device": [
+        "charade"
+      ],
+      "parse": "SOT (lush) + OS (outsize/large) + PEAK (visor) = SOTOSPEAK",
+      "definition": "as it were",
+      "surface": "An apparently descriptive phrase about an oversized visor",
+      "lesson": "A seamless surface can disguise a multi-part charade.",
+      "provenance": "user-supplied",
+      "status": "reference",
+      "tags": [
+        "economy",
+        "misdirection",
+        "multi-part"
+      ]
+    },
+    {
+      "id": "saute-around-l",
+      "clue": "Greet large cook outside (6)",
+      "answer": "SALUTE",
+      "device": [
+        "container"
+      ],
+      "parse": "SAUTE (cook) outside L (large) -> SA(L)UTE",
+      "definition": "Greet",
+      "surface": "An instruction concerning a cook",
+      "lesson": "A short natural instruction can hide containment.",
+      "provenance": "user-supplied",
+      "status": "reference",
+      "tags": [
+        "containment",
+        "economy"
+      ]
+    },
+    {
+      "id": "h-to-o",
+      "clue": "H I J K L M N O (5)",
+      "answer": "WATER",
+      "device": [
+        "rebus",
+        "visual"
+      ],
+      "parse": "H to O -> H2O -> WATER",
+      "definition": "Entire clue operates as lateral definition",
+      "surface": "A sequence of letters",
+      "lesson": "Consider visual typography and lateral interpretations, not only lexical substitution.",
+      "provenance": "user-supplied",
+      "status": "reference",
+      "tags": [
+        "lateral",
+        "aha"
+      ]
+    },
+    {
+      "id": "pat-ella",
+      "clue": "2 girls on each knee (7)",
+      "answer": "PATELLA",
+      "device": [
+        "charade"
+      ],
+      "parse": "PAT + ELLA -> PATELLA",
+      "definition": "knee (loosely, kneecap)",
+      "surface": "Two girls seated on someone's knees",
+      "lesson": "Concrete visual scenes can conceal short name-based charades; check definition precision.",
+      "provenance": "user-supplied",
+      "status": "reference",
+      "tags": [
+        "surface-story",
+        "definition-precision"
+      ]
+    },
+    {
+      "id": "tops-reversed",
+      "clue": "Under tops looking back is a stain (4)",
+      "answer": "SPOT",
+      "device": [
+        "reversal"
+      ],
+      "parse": "TOPS backwards -> SPOT",
+      "definition": "a stain",
+      "surface": "Looking under clothing and discovering a stain",
+      "lesson": "Let the indicator belong to a misleading scene, not just a mechanical instruction.",
+      "provenance": "collaborative-draft",
+      "status": "draft",
+      "tags": [
+        "reversal",
+        "surface-story"
+      ]
+    },
+    {
+      "id": "pots-anagram",
+      "clue": "Place for pots to be rearranged (4)",
+      "answer": "SPOT",
+      "device": [
+        "anagram"
+      ],
+      "parse": "POTS rearranged -> SPOT",
+      "definition": "Place",
+      "surface": "Rearranging pots",
+      "lesson": "Correct anagrams are not enough; conspicuous indicators and bland surfaces are weak.",
+      "provenance": "assistant-draft",
+      "status": "rejected",
+      "tags": [
+        "too-obvious",
+        "mechanically-valid"
+      ]
+    }
+  ]
+}
