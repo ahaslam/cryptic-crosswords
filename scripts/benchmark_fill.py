@@ -57,32 +57,41 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             if not 50<=entry_count<=55:
                 raise AssertionError('Generated grid violates 50–55 entry contract')
             started=time.monotonic()
+            # Attempt a high-quality fill first, with a strictly bounded budget.
+            # If this fails, retain the unrestricted feasibility path.
+            quality_started=time.monotonic()
+            quality_status='unfilled'
+            quality_nodes=None
+            improved=None
+            quality_budget=max(1,budget//4)
+            try:
+                improved,quality_nodes=fill(
+                    pattern,dictionary,seed=trial_seed,max_nodes=quality_budget,
+                    word_scores=scores,min_score=exception_floor,
+                    preferred_score=min_frequency,max_exceptions=max_exceptions,
+                    solver='backtracking')
+                quality_status='filled_unreviewed'
+            except (RuntimeError,ValueError):
+                pass
+            quality_seconds=round(time.monotonic()-quality_started,2)
             # Phase 1: prove a complete fill exists, without vocabulary constraints.
             try:
                 baseline,feasibility_nodes=fill(
                     pattern,dictionary,seed=trial_seed,max_nodes=budget,
                     solver='backtracking')
             except RuntimeError as exc:
-                trials.append({'seed':trial_seed,'status':'unfilled','entries':entry_count,
+                if improved is not None:
+                    baseline=improved
+                    feasibility_nodes=None
+                else:
+                    trials.append({'seed':trial_seed,'status':'unfilled','entries':entry_count,
                                'node_budget':budget,'selected_grid_seed':selected_seed,
                                'grid_metrics':grid_metrics,'reason':str(exc),
-                               'fill_seconds':round(time.monotonic()-started,2)})
-                continue
+                               'fill_seconds':round(time.monotonic()-started,2),
+                               'quality_status':quality_status,
+                               'quality_seconds':quality_seconds})
+                    continue
             feasibility_seconds=round(time.monotonic()-started,2)
-            # Phase 2: try a higher-quality fill, but never discard a valid baseline.
-            quality_started=time.monotonic()
-            quality_status='unfilled'
-            quality_nodes=None
-            try:
-                improved,quality_nodes=fill(
-                    pattern,dictionary,seed=trial_seed,max_nodes=budget,
-                    word_scores=scores,min_score=exception_floor,
-                    solver='backtracking')
-                quality_status='filled_unreviewed'
-            except RuntimeError:
-                improved=None
-            quality_seconds=round(time.monotonic()-quality_started,2)
-
             def assess(draft):
                 answers=[c['answer'] for group in draft['clues'].values() for c in group]
                 exceptions=sorted(
