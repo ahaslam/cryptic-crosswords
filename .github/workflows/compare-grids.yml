@@ -26,13 +26,13 @@ jobs:
           r=json.load(open('grid-comparison.json'))
           print('References:',r['reference_count'],'Generated:',r['generated_count'])
           for metric in r['references']:
-              print(metric,'reference:',r['references'][metric],'generated:',r['generated'][metric])
+              print(metric,'reference:',r['references'][metric],'raw:',r['generated'][metric],'ranked:',r['ranked'][metric])
           with open('grid-comparison-summary.md','w') as f:
               f.write('# Grid quality comparison\n\n')
               f.write(f"References: {r['reference_count']}; generated grids: {r['generated_count']}\n\n")
-              f.write('| Measure | Published reference mean | Generated mean |\n|---|---:|---:|\n')
+              f.write('| Measure | Published reference mean | Raw mean | Ranked mean |\n|---|---:|---:|---:|\n')
               for key in r['references']:
-                  f.write(f"| {key} | {r['references'][key]['mean']} | {r['generated'][key]['mean']} |\n")
+                  f.write(f"| {key} | {r['references'][key]['mean']} | {r['generated'][key]['mean']} | {r['ranked'][key]['mean']} |\n")
           PY
           cat grid-comparison-summary.md >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
