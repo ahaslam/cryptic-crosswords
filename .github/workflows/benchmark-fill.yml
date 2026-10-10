@@ -4,6 +4,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'scripts/**'
+      - 'data/reference-grids.json'
       - '.github/workflows/benchmark-fill.yml'
   workflow_dispatch:
     inputs:
