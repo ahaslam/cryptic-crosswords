@@ -80,6 +80,7 @@ def generate(seed=0, attempts=20000, min_clues=26, max_clues=30):
     rng = random.Random(seed)
     pairs = [(r, c) for r in range(N) for c in range(N)
              if (r, c) <= (N-1-r, N-1-c)]
+    best = None
     for trial in range(max(1, attempts)):
         variant = (seed + trial) % 4
         grid = _lattice(bool(variant & 1), bool(variant & 2))
@@ -91,7 +92,12 @@ def generate(seed=0, attempts=20000, min_clues=26, max_clues=30):
         # from an initially open grid. Every change preserves rotational symmetry.
         for r, c in order:
             if min_clues <= len(slots(grid)) <= max_clues:
-                return [''.join(row) for row in grid]
+                result = [''.join(row) for row in grid]
+                if len(slots(grid)) >= 28:
+                    return result
+                if best is None:
+                    best = result
+                break
             rr, cc = N-1-r, N-1-c
             if grid[r][c] == '#' or grid[rr][cc] == '#':
                 continue
@@ -99,7 +105,13 @@ def generate(seed=0, attempts=20000, min_clues=26, max_clues=30):
             if not _structural(grid) or len(slots(grid)) > max_clues:
                 grid[r][c] = grid[rr][cc] = '.'
         if min_clues <= len(slots(grid)) <= max_clues:
-            return [''.join(row) for row in grid]
+            result = [''.join(row) for row in grid]
+            if len(slots(grid)) >= 28:
+                return result
+            if best is None:
+                best = result
+    if best is not None:
+        return best
     raise RuntimeError('No valid lattice grid found: try a different seed or more attempts')
 
 if __name__ == '__main__':
