@@ -79,6 +79,42 @@ jobs:
             --max-exceptions "$MAX_EXCEPTIONS" --exception-floor "$EXCEPTION_FLOOR" \
             --grid-strategy "$GRID_STRATEGY" --grid-candidates "$GRID_CANDIDATES" \
             --report fill-benchmark.json
+      - name: Compare difficulty profiles on identical grid seeds
+        run: |
+          mkdir -p /tmp/difficulty-comparison
+          for level in accessible standard challenging; do
+            python scripts/benchmark_fill.py --difficulty "$level" \
+              --solver csp --seed 0 --grid-trials 2 --grid-candidates 4 \
+              --max-nodes 4000 --report "/tmp/difficulty-comparison/$level.json"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          out=Path('/tmp/difficulty-comparison')
+          reports={level:json.loads((out/(level+'.json')).read_text())
+                   for level in ('accessible','standard','challenging')}
+          lines=['## Matched-seed difficulty comparison','',
+                 '| Level | Status | Answers | Mean frequency | Exceptions | Grid seed |',
+                 '|---|---|---:|---:|---:|---:|']
+          for level,r in reports.items():
+              q=r.get('selected_quality',{})
+              draft=r.get('draft',{})
+              count=sum(map(len,draft.get('clues',{}).values()))
+              seed=next((t.get('selected_grid_seed','—') for t in r['trials']
+                         if t['status']=='filled_unreviewed'),'—')
+              lines.append(f"| {level} | {r['status']} | {count} | {q.get('mean_frequency','—')} | {q.get('exception_count','—')} | {seed} |")
+          lines+=['','Scores reflect vocabulary popularity, not measured clue difficulty.',
+                  'Full unpublished answer lists are attached as a workflow artifact.']
+          with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a') as f:
+              f.write('\n'.join(lines)+'\n')
+          print('\n'.join(lines))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: difficulty-comparison-drafts
+          path: /tmp/difficulty-comparison/*.json
+          if-no-files-found: warn
       - name: Require completed draft meeting vocabulary budget
         run: |
           python -c "import json,sys; r=json.load(open('fill-benchmark.json')); print('Fill:',r['status'],'quality target:',r.get('quality_target_met')); sys.exit(0 if r['status']=='filled_unreviewed' and r.get('quality_target_met') is True else 1)"
