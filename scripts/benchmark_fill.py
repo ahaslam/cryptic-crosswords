@@ -136,13 +136,25 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             improved_quality=assess(improved) if improved else None
             # The quality phase enforces the exception cap inside the solver.
             # Keep the unconstrained baseline for diagnostics if no compliant fill exists.
-            # Fewer uncommon answers wins; then higher mean frequency.
+            # First satisfy the rarity budget; among compliant fills prefer
+            # better whole-grid editorial diversity, then fewer exceptions.
             selected='baseline'
             draft=baseline
             if improved is not None and (
-                baseline_quality['exception_count']>max_exceptions or
-                (improved_quality['exception_count'],-improved_quality['mean_frequency'])
-                < (baseline_quality['exception_count'],-baseline_quality['mean_frequency'])
+                (baseline_quality['exception_count']>max_exceptions and
+                 improved_quality['exception_count']<=max_exceptions) or
+                (improved_quality['exception_count']<=max_exceptions and
+                 baseline_quality['exception_count']<=max_exceptions and
+                 (-score_draft(improved)['score'],
+                  improved_quality['exception_count'],
+                  -improved_quality['mean_frequency'])
+                 < (-score_draft(baseline)['score'],
+                    baseline_quality['exception_count'],
+                    -baseline_quality['mean_frequency'])) or
+                (improved_quality['exception_count']>max_exceptions and
+                 baseline_quality['exception_count']>max_exceptions and
+                 (improved_quality['exception_count'],-improved_quality['mean_frequency'])
+                 < (baseline_quality['exception_count'],-baseline_quality['mean_frequency']))
             ):
                 selected='improved'
                 draft=improved
@@ -160,6 +172,8 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                            'baseline_quality':baseline_quality,
                            'improved_quality':improved_quality,
                            'selected':selected,
+                           'baseline_editorial':score_draft(baseline),
+                           'improved_editorial':score_draft(improved) if improved else None,
                            'quality_target_met':selected_quality['exception_count']<=max_exceptions,
                            **selected_quality})
             if selected_quality['exception_count']>max_exceptions:
