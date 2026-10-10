@@ -12,7 +12,7 @@ except ImportError:
     from wordplay_explorer import verify
 
 FAMILIES = {
-    "letter-manipulation": {"anagram", "reversal", "deletion", "substitution"},
+    "letter-manipulation": {"anagram", "subtractive-anagram", "reversal", "deletion", "substitution"},
     "assembly": {"charade", "container", "alternation"},
     "concealment": {"hidden", "acrostic", "telestich"},
     "sound-and-meaning": {"homophone", "double-definition", "cryptic-definition"},
@@ -21,7 +21,7 @@ FAMILIES = {
 FAMILIES["lateral"].remove("reb us")
 FAMILIES["lateral"].add("rebus")
 DEVICE_TO_FAMILY = {device: family for family, devices in FAMILIES.items() for device in devices}
-LITERAL_DEVICES = {"anagram", "reversal", "deletion", "charade", "container", "hidden"}
+LITERAL_DEVICES = {"anagram", "subtractive-anagram", "reversal", "deletion", "charade", "container", "hidden"}
 REQUIRED = ("answer", "clue", "device", "definition", "parse", "surface_story")
 
 def assess(candidate):
@@ -42,7 +42,7 @@ def assess(candidate):
             errors.append("missing fodder for literal verification")
         else:
             kwargs = {}
-            if device in ("deletion", "container"):
+            if device in ("deletion", "container", "subtractive-anagram"):
                 kwargs["container"] = candidate.get("container")
             if device == "container":
                 kwargs["position"] = candidate.get("position")
