@@ -60,7 +60,7 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install cmudict wordfreq
       - name: Test difficulty profiles
-        run: PYTHONPATH=scripts python -m unittest scripts/test_difficulty.py scripts/test_clue_review.py
+        run: PYTHONPATH=scripts python -m unittest scripts/test_difficulty.py scripts/test_clue_review.py scripts/test_answer_suitability.py
       - name: Run benchmark
         env:
           DIFFICULTY: ${{ inputs.difficulty || 'standard' }}
