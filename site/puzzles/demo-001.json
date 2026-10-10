@@ -1,0 +1,58 @@
+{
+  "id": "demo-001",
+  "title": "Starter demonstration",
+  "size": 3,
+  "grid": [
+    "CAT",
+    "ARE",
+    "TEN"
+  ],
+  "clues": {
+    "across": [
+      {
+        "number": 1,
+        "row": 0,
+        "col": 0,
+        "answer": "CAT",
+        "text": "Pet from ACT rearranged (3)"
+      },
+      {
+        "number": 4,
+        "row": 1,
+        "col": 0,
+        "answer": "ARE",
+        "text": "Exist, in the plural (3)"
+      },
+      {
+        "number": 5,
+        "row": 2,
+        "col": 0,
+        "answer": "TEN",
+        "text": "Number from NET rearranged (3)"
+      }
+    ],
+    "down": [
+      {
+        "number": 1,
+        "row": 0,
+        "col": 0,
+        "answer": "CAT",
+        "text": "Pet from ACT rearranged (3)"
+      },
+      {
+        "number": 2,
+        "row": 0,
+        "col": 1,
+        "answer": "ARE",
+        "text": "Exist, in the plural (3)"
+      },
+      {
+        "number": 3,
+        "row": 0,
+        "col": 2,
+        "answer": "TEN",
+        "text": "Number from NET rearranged (3)"
+      }
+    ]
+  }
+}
