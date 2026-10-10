@@ -27,6 +27,14 @@ on:
         description: "Minimum frequency used in quality improvement phase"
         required: false
         default: "2.0"
+      grid_strategy:
+        description: "Grid selection: ranked or random baseline"
+        required: false
+        default: "ranked"
+      grid_candidates:
+        description: "Valid patterns evaluated for each grid trial"
+        required: false
+        default: "8"
       max_nodes:
         description: "Maximum search nodes"
         required: false
@@ -47,6 +55,8 @@ jobs:
       - name: Run benchmark
         env:
           SEED: ${{ inputs.seed || '0' }}
+          GRID_STRATEGY: ${{ inputs.grid_strategy || 'ranked' }}
+          GRID_CANDIDATES: ${{ inputs.grid_candidates || '8' }}
           MAX_NODES: ${{ inputs.max_nodes || '10000' }}
           MIN_FREQUENCY: ${{ inputs.min_frequency || '3.0' }}
           GRID_TRIALS: ${{ inputs.grid_trials || '4' }}
@@ -57,6 +67,7 @@ jobs:
             --seed "$SEED" --max-nodes "$MAX_NODES" \
             --min-frequency "$MIN_FREQUENCY" --grid-trials "$GRID_TRIALS" \
             --max-exceptions "$MAX_EXCEPTIONS" --exception-floor "$EXCEPTION_FLOOR" \
+            --grid-strategy "$GRID_STRATEGY" --grid-candidates "$GRID_CANDIDATES" \
             --report fill-benchmark.json
       - name: Publish benchmark summary
         if: always()

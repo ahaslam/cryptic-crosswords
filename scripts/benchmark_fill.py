@@ -11,9 +11,13 @@ from pathlib import Path
 
 from fill_grid import fill
 from generate_grid import generate, slots
+from rank_grids import select, metrics
 
 def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
-        grid_trials=4, max_exceptions=5, exception_floor=2.0):
+        grid_trials=4, max_exceptions=5, exception_floor=2.0,
+        grid_candidates=8, grid_strategy='ranked'):
+    if grid_candidates<1 or grid_strategy not in ('ranked','random'):
+        raise ValueError('Invalid grid selection settings')
     if grid_trials<1 or max_nodes<grid_trials:
         raise ValueError('max_nodes must be >= grid_trials >= 1')
     if not 0<=max_exceptions<=55 or exception_floor>min_frequency:
@@ -39,7 +43,13 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             trial_seed=seed+trial
             budget=base+(1 if trial<extra else 0)
             try:
-                pattern=generate(seed=trial_seed,attempts=grid_attempts)
+                if grid_strategy=='ranked':
+                    pattern,selected_seed,grid_metrics=select(
+                        trial_seed,grid_candidates,grid_attempts)
+                else:
+                    pattern=generate(seed=trial_seed,attempts=grid_attempts)
+                    selected_seed=trial_seed
+                    grid_metrics=metrics(pattern)
             except RuntimeError as exc:
                 trials.append({'seed':trial_seed,'status':'grid_failed','reason':str(exc)})
                 continue
@@ -54,7 +64,8 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     solver='backtracking')
             except RuntimeError as exc:
                 trials.append({'seed':trial_seed,'status':'unfilled','entries':entry_count,
-                               'node_budget':budget,'reason':str(exc),
+                               'node_budget':budget,'selected_grid_seed':selected_seed,
+                               'grid_metrics':grid_metrics,'reason':str(exc),
                                'fill_seconds':round(time.monotonic()-started,2)})
                 continue
             feasibility_seconds=round(time.monotonic()-started,2)
@@ -93,7 +104,8 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 draft=improved
             selected_quality=assess(draft)
             trials.append({'seed':trial_seed,'status':'filled_unreviewed',
-                           'entries':entry_count,'feasibility_nodes':feasibility_nodes,
+                           'entries':entry_count,'selected_grid_seed':selected_seed,
+                           'grid_metrics':grid_metrics,'feasibility_nodes':feasibility_nodes,
                            'feasibility_seconds':feasibility_seconds,
                            'quality_status':quality_status,'quality_nodes':quality_nodes,
                            'quality_seconds':quality_seconds,
@@ -105,13 +117,15 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             return {'status':'filled_unreviewed','seed':seed,'dictionary_words':len(words),
                     'eligible_words':eligible,'allowed_words':allowed,
                     'min_frequency':min_frequency,'exception_floor':exception_floor,
-                    'max_exceptions':max_exceptions,'grid_trials':grid_trials,
+                    'max_exceptions':max_exceptions,'grid_trials':grid_trials,'grid_strategy':grid_strategy,
+                    'grid_candidates':grid_candidates,
                     'max_nodes_total':max_nodes,'elapsed_seconds':round(time.monotonic()-start,2),
                     'trials':trials,'draft':draft}
     return {'status':'unfilled','seed':seed,'dictionary_words':len(words),
             'eligible_words':eligible,'allowed_words':allowed,
             'min_frequency':min_frequency,'exception_floor':exception_floor,
-            'max_exceptions':max_exceptions,'grid_trials':grid_trials,
+            'max_exceptions':max_exceptions,'grid_trials':grid_trials,'grid_strategy':grid_strategy,
+            'grid_candidates':grid_candidates,
             'max_nodes_total':max_nodes,'elapsed_seconds':round(time.monotonic()-start,2),
             'trials':trials}
 
@@ -121,13 +135,16 @@ def main():
     parser.add_argument('--max-nodes',type=int,default=10000)
     parser.add_argument('--grid-attempts',type=int,default=20000)
     parser.add_argument('--grid-trials',type=int,default=4)
+    parser.add_argument('--grid-candidates',type=int,default=8)
+    parser.add_argument('--grid-strategy',choices=('ranked','random'),default='ranked')
     parser.add_argument('--max-exceptions',type=int,default=5)
     parser.add_argument('--exception-floor',type=float,default=2.0)
     parser.add_argument('--min-frequency',type=float,default=3.0)
     parser.add_argument('--report',default='fill-benchmark.json')
     args=parser.parse_args()
     report=run(args.seed,args.max_nodes,args.grid_attempts,args.min_frequency,
-               args.grid_trials,args.max_exceptions,args.exception_floor)
+               args.grid_trials,args.max_exceptions,args.exception_floor,
+               args.grid_candidates,args.grid_strategy)
     target=Path(args.report).resolve()
     published=(Path(__file__).resolve().parents[1]/'site'/'puzzles').resolve()
     if target==published or published in target.parents:
