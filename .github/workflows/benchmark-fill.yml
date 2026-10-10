@@ -8,6 +8,12 @@ on:
       - '.github/workflows/benchmark-fill.yml'
   workflow_dispatch:
     inputs:
+      difficulty:
+        description: "Provisional answer-vocabulary difficulty"
+        required: false
+        type: choice
+        options: [accessible, standard, challenging]
+        default: standard
       seed:
         description: "Grid/random seed"
         required: false
@@ -21,7 +27,7 @@ on:
         required: false
         default: "4"
       max_exceptions:
-        description: "Target maximum uncommon answers (reported, not enforced)"
+        description: "Target maximum uncommon answers (enforced during quality search)"
         required: false
         default: "5"
       exception_floor:
@@ -53,8 +59,11 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install cmudict wordfreq
+      - name: Test difficulty profiles
+        run: PYTHONPATH=scripts python -m unittest scripts/test_difficulty.py
       - name: Run benchmark
         env:
+          DIFFICULTY: ${{ inputs.difficulty || 'standard' }}
           SEED: ${{ inputs.seed || '0' }}
           GRID_STRATEGY: ${{ inputs.grid_strategy || 'ranked' }}
           GRID_CANDIDATES: ${{ inputs.grid_candidates || '8' }}
@@ -65,7 +74,7 @@ jobs:
           EXCEPTION_FLOOR: ${{ inputs.exception_floor || '2.0' }}
         run: |
           python scripts/benchmark_fill.py \
-            --seed "$SEED" --max-nodes "$MAX_NODES" \
+            --difficulty "$DIFFICULTY" --seed "$SEED" --max-nodes "$MAX_NODES" \
             --min-frequency "$MIN_FREQUENCY" --grid-trials "$GRID_TRIALS" \
             --max-exceptions "$MAX_EXCEPTIONS" --exception-floor "$EXCEPTION_FLOOR" \
             --grid-strategy "$GRID_STRATEGY" --grid-candidates "$GRID_CANDIDATES" \
