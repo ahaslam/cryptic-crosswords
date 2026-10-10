@@ -59,4 +59,14 @@ class FillTests(unittest.TestCase):
                      word_scores=scores,min_score=2.0,
                      preferred_score=3.0,max_exceptions=0)
 
+    def test_unavoidable_rare_words_exceed_budget(self):
+        with tempfile.TemporaryDirectory() as d:
+            dictionary=Path(d)/'words.txt'
+            dictionary.write_text('ABC\\nDEF\\nGHI\\nADG\\nBEH\\nCFI\\n')
+            scores={w:2.2 for w in ('ABC','DEF','GHI','ADG','BEH','CFI')}
+            with self.assertRaises(RuntimeError) as context:
+                fill(['...']*3,dictionary,max_nodes=1000,word_scores=scores,
+                     min_score=2.0,preferred_score=3.0,max_exceptions=5)
+            self.assertIn('after 0 attempts',str(context.exception))
+
 if __name__=='__main__':unittest.main()
