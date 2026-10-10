@@ -12,6 +12,7 @@ from pathlib import Path
 from fill_grid import fill
 from generate_grid import generate, slots
 from rank_grids import select, metrics
+from answer_suitability import assess
 
 DIFFICULTY_PRESETS = {
     'accessible': {'cmu_min': 3.5, 'cmu_floor': 2.5, 'lufz_min': 85.0, 'lufz_floor': 60.0, 'max_exceptions': 2},
@@ -46,6 +47,11 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
         words=sorted({w.upper() for w in cmudict.words()
                       if w.isascii() and w.isalpha() and 3<=len(w)<=15})
         scores={w:zipf_frequency(w,'en') for w in words}
+    # Preserve raw scores for reporting and exception budgets; use a separate
+    # difficulty-sensitive preference for candidate ordering in the CSP solver.
+    score_scale=100.0 if scored_dictionary else 7.0
+    suitability_scores={w:assess(w,max(0,min(1,v/score_scale)),difficulty).score
+                        for w,v in scores.items()}
     eligible=sum(v>=min_frequency for v in scores.values())
     allowed=sum(v>=exception_floor for v in scores.values())
     start=time.monotonic()
@@ -80,7 +86,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     pattern,dictionary,seed=trial_seed,max_nodes=budget,
                     word_scores=scores if scored_dictionary else None,
                     min_score=exception_floor if scored_dictionary else None,
-                    solver=solver)
+                    solver=solver,ranking_scores=suitability_scores)
             except RuntimeError as exc:
                 trials.append({'seed':trial_seed,'status':'unfilled','entries':entry_count,
                                'node_budget':budget,'selected_grid_seed':selected_seed,
@@ -97,7 +103,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     pattern,dictionary,seed=trial_seed,max_nodes=budget,
                     word_scores=scores,min_score=exception_floor,
                     preferred_score=min_frequency,max_exceptions=max_exceptions,
-                    solver=solver)
+                    solver=solver,ranking_scores=suitability_scores)
                 quality_status='filled_unreviewed'
             except RuntimeError:
                 improved=None
@@ -127,6 +133,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 selected='improved'
                 draft=improved
             draft['difficulty']=difficulty
+            draft['ranking_policy']='graded_suitability_v1'
             selected_quality=assess(draft)
             trials.append({'seed':trial_seed,'status':'filled_unreviewed',
                            'entries':entry_count,'selected_grid_seed':selected_seed,
