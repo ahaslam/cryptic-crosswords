@@ -53,10 +53,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install cmudict wordfreq
-      - name: Compare 100 generated grids with published references
-        run: |
-          python scripts/compare_grid_quality.py --samples 100 --output grid-comparison.json
-          python -c "import json; r=json.load(open('grid-comparison.json')); print('Reference count:',r['reference_count']); print('Generated count:',r['generated_count']); print('Reference metrics:',r['references']); print('Generated metrics:',r['generated'])"
       - name: Run benchmark
         env:
           SEED: ${{ inputs.seed || '0' }}
@@ -84,7 +80,7 @@ jobs:
         if: always()
         with:
           name: fill-benchmark
-          path: |\n            fill-benchmark.json\n            grid-comparison.json
+          path: fill-benchmark.json
           if-no-files-found: warn
       - name: Post results on pull request
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
