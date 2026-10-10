@@ -13,9 +13,18 @@ from fill_grid import fill
 from generate_grid import generate, slots
 from rank_grids import select, metrics
 
+DIFFICULTY_PRESETS = {
+    'accessible': {'cmu_min': 3.5, 'cmu_floor': 2.5, 'lufz_min': 85.0, 'lufz_floor': 60.0, 'max_exceptions': 2},
+    'standard': {'cmu_min': 3.0, 'cmu_floor': 2.0, 'lufz_min': 80.0, 'lufz_floor': 50.0, 'max_exceptions': 5},
+    'challenging': {'cmu_min': 2.7, 'cmu_floor': 1.8, 'lufz_min': 75.0, 'lufz_floor': 45.0, 'max_exceptions': 6},
+}
+
+
 def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
         grid_trials=4, max_exceptions=5, exception_floor=2.0,
-        grid_candidates=8, grid_strategy='ranked', scored_dictionary=None, solver='backtracking'):
+        grid_candidates=8, grid_strategy='ranked', scored_dictionary=None, solver='backtracking', difficulty='standard'):
+    if difficulty not in DIFFICULTY_PRESETS:
+        raise ValueError('Unknown difficulty')
     if solver not in ('backtracking','csp'):
         raise ValueError('Unknown solver')
     if grid_candidates<1 or grid_strategy not in ('ranked','random'):
@@ -117,6 +126,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             ):
                 selected='improved'
                 draft=improved
+            draft['difficulty']=difficulty
             selected_quality=assess(draft)
             trials.append({'seed':trial_seed,'status':'filled_unreviewed',
                            'entries':entry_count,'selected_grid_seed':selected_seed,
@@ -129,7 +139,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                            'selected':selected,
                            'quality_target_met':selected_quality['exception_count']<=max_exceptions,
                            **selected_quality})
-            return {'status':'filled_unreviewed','seed':seed,'dictionary_source':'lufz' if scored_dictionary else 'cmudict', 'dictionary_words':len(words),
+            return {'status':'filled_unreviewed','difficulty':difficulty,'seed':seed,'dictionary_source':'lufz' if scored_dictionary else 'cmudict', 'dictionary_words':len(words),
                     'eligible_words':eligible,'allowed_words':allowed,
                     'min_frequency':min_frequency,'exception_floor':exception_floor,
                     'max_exceptions':max_exceptions,'grid_trials':grid_trials,'grid_strategy':grid_strategy,
@@ -138,7 +148,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     'trials':trials,'draft':draft,
                     'selected_quality':selected_quality,
                     'quality_target_met':selected_quality['exception_count']<=max_exceptions}
-    return {'status':'unfilled','seed':seed,'dictionary_words':len(words),
+    return {'status':'unfilled','difficulty':difficulty,'seed':seed,'dictionary_words':len(words),
             'eligible_words':eligible,'allowed_words':allowed,
             'min_frequency':min_frequency,'exception_floor':exception_floor,
             'max_exceptions':max_exceptions,'grid_trials':grid_trials,'grid_strategy':grid_strategy,
@@ -149,21 +159,28 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--seed',type=int,default=0)
+    parser.add_argument('--difficulty',choices=tuple(DIFFICULTY_PRESETS),default='standard',
+                        help='Provisional answer-vocabulary profile; not a calibrated clue difficulty')
     parser.add_argument('--max-nodes',type=int,default=10000)
     parser.add_argument('--grid-attempts',type=int,default=20000)
     parser.add_argument('--grid-trials',type=int,default=4)
     parser.add_argument('--grid-candidates',type=int,default=8)
     parser.add_argument('--grid-strategy',choices=('ranked','random'),default='ranked')
-    parser.add_argument('--max-exceptions',type=int,default=5)
-    parser.add_argument('--exception-floor',type=float,default=2.0)
-    parser.add_argument('--min-frequency',type=float,default=3.0)
+    parser.add_argument('--max-exceptions',type=int,default=None)
+    parser.add_argument('--exception-floor',type=float,default=None)
+    parser.add_argument('--min-frequency',type=float,default=None)
     parser.add_argument('--solver',choices=('backtracking','csp'),default='backtracking')
     parser.add_argument('--scored-dictionary',help='Scored TSV export; uses 0..100 popularity scale')
     parser.add_argument('--report',default='fill-benchmark.json')
     args=parser.parse_args()
-    report=run(args.seed,args.max_nodes,args.grid_attempts,args.min_frequency,
-               args.grid_trials,args.max_exceptions,args.exception_floor,
-               args.grid_candidates,args.grid_strategy,args.scored_dictionary,args.solver)
+    preset=DIFFICULTY_PRESETS[args.difficulty]
+    scale='lufz' if args.scored_dictionary else 'cmu'
+    min_frequency=args.min_frequency if args.min_frequency is not None else preset[scale+'_min']
+    exception_floor=args.exception_floor if args.exception_floor is not None else preset[scale+'_floor']
+    max_exceptions=args.max_exceptions if args.max_exceptions is not None else preset['max_exceptions']
+    report=run(args.seed,args.max_nodes,args.grid_attempts,min_frequency,
+               args.grid_trials,max_exceptions,exception_floor,
+               args.grid_candidates,args.grid_strategy,args.scored_dictionary,args.solver,args.difficulty)
     target=Path(args.report).resolve()
     published=(Path(__file__).resolve().parents[1]/'site'/'puzzles').resolve()
     if target==published or published in target.parents:
