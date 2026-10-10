@@ -28,7 +28,7 @@ def slots_of(grid):
     return slots
 
 def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=None,
-         preferred_score=None,max_exceptions=None,solver='backtracking'):
+         preferred_score=None,max_exceptions=None,solver='backtracking',ranking_scores=None):
     n=len(pattern)
     if n<3 or any(len(row)!=n or any(ch not in '#.' for ch in row) for row in pattern):
         raise ValueError('Expected square pattern of # and .')
@@ -51,7 +51,7 @@ def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=N
         raise ValueError('Unknown solver')
     if solver=='csp':
         assigned,nodes=solve_csp(slots,words,word_scores,preferred_score,
-                                 max_exceptions,max_nodes)
+                                 max_exceptions,max_nodes,ranking_scores=ranking_scores)
         if assigned is None:
             raise RuntimeError(f'No fill found after {nodes} attempts; try another grid, dictionary or node limit')
         board=[list(row) for row in pattern]
@@ -97,7 +97,7 @@ def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=N
             rng.shuffle(possible)
         else:
             # Most familiar candidates first; ties stable for reproducible results.
-            possible.sort(key=lambda w:(-word_scores.get(w,0),w))
+            possible.sort(key=lambda w:(-(ranking_scores if ranking_scores is not None else word_scores).get(w,0),w))
         for word in possible:
             exception=(max_exceptions is not None and word_scores.get(word,0)<preferred_score)
             if exception and exceptions_used>=max_exceptions:continue
