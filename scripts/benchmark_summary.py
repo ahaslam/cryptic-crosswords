@@ -23,6 +23,16 @@ def summary(path):
         secs=t.get('feasibility_seconds',t.get('fill_seconds','—'))
         lines.append(f"| {t.get('seed','?')} | {t.get('entries','?')} | "
                      f"{t.get('status','?')} | {nodes} | {secs} |")
+    pairs=[t for t in data.get('trials',[]) if t.get('paired_selection')]
+    if pairs:
+        lines.extend(["", "**Paired grid-selection audit (same candidate pools)**", "",
+                      "| Trial | Geometric seed | Vocabulary seed | Same grid? |",
+                      "|---:|---:|---:|---|"])
+        for t in pairs:
+            pair=t['paired_selection']
+            lines.append(f"| {t.get('seed','?')} | {pair['geometric_seed']} | "
+                         f"{pair['vocabulary_seed']} | {pair['same_grid']} |")
+        lines.append("\\nThis compares grid selection only, not fill outcomes for both strategies.")
     for t in data.get('trials',[]):
         if t.get('status')=='filled_unreviewed':
             lines.extend(["",f"**Selected fill:** {t.get('selected','?')}  ",
