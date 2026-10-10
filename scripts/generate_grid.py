@@ -46,7 +46,7 @@ def valid(grid, min_clues=26, max_clues=30):
                 queue.append(neighbor)
     return seen == white
 
-def generate(seed=0, attempts=20000, min_clues=50, max_clues=55):
+def generate(seed=0, attempts=20000, min_clues=26, max_clues=30):
     if not 1 <= min_clues <= max_clues <= 60:
         raise ValueError('Clue count must be between 1 and 60')
     rng = random.Random(seed)
