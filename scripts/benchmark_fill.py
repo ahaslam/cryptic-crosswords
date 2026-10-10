@@ -56,6 +56,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
     allowed=sum(v>=exception_floor for v in scores.values())
     start=time.monotonic()
     trials=[]
+    best_fallback=None
     # The budget is a total cap across all layouts, not per layout.
     base,extra=divmod(max_nodes,grid_trials)
     with tempfile.TemporaryDirectory() as tmp:
@@ -146,6 +147,14 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                            'selected':selected,
                            'quality_target_met':selected_quality['exception_count']<=max_exceptions,
                            **selected_quality})
+            if selected_quality['exception_count']>max_exceptions:
+                # Keep searching other layouts rather than stopping at the
+                # first technically complete but unsuitable draft.
+                candidate=(selected_quality['exception_count'],
+                           -selected_quality['mean_frequency'])
+                if best_fallback is None or candidate<best_fallback[0]:
+                    best_fallback=(candidate,draft,selected_quality)
+                continue
             return {'status':'filled_unreviewed','difficulty':difficulty,'seed':seed,'dictionary_source':'lufz' if scored_dictionary else 'cmudict', 'dictionary_words':len(words),
                     'eligible_words':eligible,'allowed_words':allowed,
                     'min_frequency':min_frequency,'exception_floor':exception_floor,
@@ -155,6 +164,18 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     'trials':trials,'draft':draft,
                     'selected_quality':selected_quality,
                     'quality_target_met':selected_quality['exception_count']<=max_exceptions}
+    if best_fallback is not None:
+        _,draft,quality=best_fallback
+        return {'status':'filled_unreviewed','difficulty':difficulty,
+                'dictionary_source':'lufz' if scored_dictionary else 'cmudict',
+                'seed':seed,'dictionary_words':len(words),'eligible_words':eligible,
+                'allowed_words':allowed,'min_frequency':min_frequency,
+                'exception_floor':exception_floor,'max_exceptions':max_exceptions,
+                'grid_trials':grid_trials,'grid_strategy':grid_strategy,
+                'grid_candidates':grid_candidates,'solver':solver,
+                'max_nodes_total':max_nodes,'elapsed_seconds':round(time.monotonic()-start,2),
+                'trials':trials,'draft':draft,'selected_quality':quality,
+                'quality_target_met':False}
     return {'status':'unfilled','difficulty':difficulty,'seed':seed,'dictionary_words':len(words),
             'eligible_words':eligible,'allowed_words':allowed,
             'min_frequency':min_frequency,'exception_floor':exception_floor,
