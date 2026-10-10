@@ -126,6 +126,7 @@ jobs:
           Path('/tmp/lufz-reviewed.tsv').write_text('\n'.join(kept)+'\n')
           print('Excluded',len(rows)-len(kept),'editorially problematic answers')
           assert not any(row.split('\t',1)[0] in rejected for row in kept)
+          assert len(rows)-len(kept)>0, 'Editorial exclusions matched no dictionary entries'
           PY
           python scripts/benchmark_fill.py --solver csp \
             --scored-dictionary /tmp/lufz-reviewed.tsv \
@@ -141,7 +142,18 @@ jobs:
           if-no-files-found: warn
       - name: Report quality-filtered CSP answers
         run: |
-          python -c "import json; r=json.load(open('/tmp/lufz-reviewed-csp.json')); print('QUALITY FILTERED STATUS:',r['status']); print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/lufz-reviewed-csp.json').read_text())
+          print('QUALITY FILTERED STATUS:',r['status'])
+          print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))
+          if r['status']=='filled_unreviewed':
+              allowed={line.split('\t',1)[0] for line in Path('/tmp/lufz-reviewed.tsv').read_text().splitlines()}
+              answers={clue['answer'] for group in r['draft']['clues'].values() for clue in group}
+              excluded=answers-allowed
+              assert not excluded, f'Fill used words outside editorial dictionary: {sorted(excluded)}'
+          PY
       - name: Show CSP draft answers
         run: |
           python -c "import json; r=json.load(open('/tmp/lufz-top-csp.json')); print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))"
