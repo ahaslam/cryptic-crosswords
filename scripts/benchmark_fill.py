@@ -15,6 +15,7 @@ from rank_grids import select, metrics, candidates
 from vocabulary_grid_rank import select_vocabulary_aware
 from answer_suitability import assess as assess_suitability
 from editorial_signals import review_signal, review_draft
+from grid_editorial_quality import score_draft
 
 DIFFICULTY_PRESETS = {
     'accessible': {'cmu_min': 3.5, 'cmu_floor': 2.5, 'lufz_min': 85.0, 'lufz_floor': 60.0, 'max_exceptions': 2},
@@ -148,6 +149,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             draft['difficulty']=difficulty
             draft['ranking_policy']='graded_suitability_editorial_v2'
             draft['editorial_review']=review_draft(draft)
+            draft['grid_editorial_quality']=score_draft(draft)
             selected_quality=assess(draft)
             trials.append({'seed':trial_seed,'status':'filled_unreviewed',
                            'entries':entry_count,'selected_grid_seed':selected_seed,
