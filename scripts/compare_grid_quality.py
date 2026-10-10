@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Compare reference grid distributions with independently generated grids."""
+import argparse
 import json
 from pathlib import Path
 from analyse_reference_grids import analyse
@@ -25,5 +26,16 @@ def compare(references, seeds=range(6)):
 
 if __name__ == '__main__':
     root = Path(__file__).resolve().parents[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--samples', type=int, default=100)
+    parser.add_argument('--output', type=Path)
+    args = parser.parse_args()
+    if args.samples < 1:
+        parser.error('--samples must be positive')
     refs = json.loads((root/'data'/'reference-grids.json').read_text())
-    print(json.dumps(compare(refs), indent=2))
+    result = compare(refs, range(args.samples))
+    payload = json.dumps(result, indent=2) + '\n'
+    if args.output:
+        args.output.write_text(payload)
+    else:
+        print(payload, end='')
