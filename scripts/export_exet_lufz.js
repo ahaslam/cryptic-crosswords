@@ -16,31 +16,21 @@ function exportLexicon(source, destination) {
     filename: source, timeout: 30000,
   });
   const data = context.exetLexicon;
-  if (!Array.isArray(data.lexicon) || !Array.isArray(data.importance) ||
-      data.lexicon.length !== data.importance.length) {
-    throw new Error('Unsupported Exet lexicon format: missing aligned lexicon/importance arrays');
+  if (!Array.isArray(data.lexicon) || data.lexicon.length < 2) {
+    throw new Error('Unsupported Exet lexicon format: missing ranked lexicon array');
   }
-  const rows = [];
-  const values = [];
+  // Lufz entries are ordered by descending Wikipedia popularity, with a
+  // sentinel empty string at index 0. No importance/scores array is supplied.
+  const count = data.lexicon.length - 1;
+  const lines = [];
   for (let i = 1; i < data.lexicon.length; i++) {
     const word = data.lexicon[i];
-    const importance = Number(data.importance[i]);
-    if (typeof word !== 'string' || !Number.isFinite(importance)) continue;
+    if (typeof word !== 'string') continue;
     const answer = word.toUpperCase().replace(/[^A-Z]/g, '');
     if (answer.length < 3 || answer.length > 15) continue;
-    rows.push({ word, importance });
-    values.push(importance);
+    const score = Math.round(100 * (1 - (i - 1) / Math.max(1, count - 1)));
+    lines.push(word.replace(/[\\t\\r\\n]/g, ' ') + '\\t' + score);
   }
-  // Wikipedia importance measures occurrences (higher means more popular).
-  // Derive a monotonic 0..100 percentile score without assuming rank range.
-  const ordered = [...values].sort((a, b) => a - b);
-  const rank = new Map();
-  ordered.forEach((value, index) => { if (!rank.has(value)) rank.set(value, index); });
-  const n = Math.max(1, ordered.length - 1);
-  const lines = rows.map(({ word, importance }) => {
-    const score = Math.round(100 * rank.get(importance) / n);
-    return word.replace(/[\t\r\n]/g, ' ') + '\t' + score;
-  });
   fs.writeFileSync(destination, lines.join('\n') + '\n', 'utf8');
   return lines.length;
 }
