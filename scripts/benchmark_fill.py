@@ -11,12 +11,12 @@ from pathlib import Path
 
 from fill_grid import fill
 from generate_grid import generate, slots
-from rank_grids import select, metrics
+from rank_grids import select, select_vocabulary, metrics
 
 def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
         grid_trials=4, max_exceptions=5, exception_floor=2.0,
         grid_candidates=8, grid_strategy='ranked'):
-    if grid_candidates<1 or grid_strategy not in ('ranked','random'):
+    if grid_candidates<1 or grid_strategy not in ('ranked','random','vocabulary'):
         raise ValueError('Invalid grid selection settings')
     if grid_trials<1 or max_nodes<grid_trials:
         raise ValueError('max_nodes must be >= grid_trials >= 1')
@@ -30,6 +30,8 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
     words=sorted({w.upper() for w in cmudict.words()
                   if w.isascii() and w.isalpha() and 3<=len(w)<=15})
     scores={w:zipf_frequency(w,'en') for w in words}
+    from collections import Counter
+    common_counts=Counter(len(w) for w in words if scores[w]>=min_frequency)
     eligible=sum(v>=min_frequency for v in scores.values())
     allowed=sum(v>=exception_floor for v in scores.values())
     start=time.monotonic()
@@ -43,7 +45,10 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             trial_seed=seed+trial
             budget=base+(1 if trial<extra else 0)
             try:
-                if grid_strategy=='ranked':
+                if grid_strategy=='vocabulary':
+                    pattern,selected_seed,grid_metrics=select_vocabulary(
+                        trial_seed,common_counts,grid_candidates,grid_attempts)
+                elif grid_strategy=='ranked':
                     pattern,selected_seed,grid_metrics=select(
                         trial_seed,grid_candidates,grid_attempts)
                 else:
@@ -145,7 +150,7 @@ def main():
     parser.add_argument('--grid-attempts',type=int,default=20000)
     parser.add_argument('--grid-trials',type=int,default=4)
     parser.add_argument('--grid-candidates',type=int,default=8)
-    parser.add_argument('--grid-strategy',choices=('ranked','random'),default='ranked')
+    parser.add_argument('--grid-strategy',choices=('ranked','random','vocabulary'),default='ranked')
     parser.add_argument('--max-exceptions',type=int,default=5)
     parser.add_argument('--exception-floor',type=float,default=2.0)
     parser.add_argument('--min-frequency',type=float,default=3.0)
