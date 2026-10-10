@@ -1,0 +1,42 @@
+name: Verify Exet Lufz import
+on:
+  pull_request:
+    paths:
+      - 'scripts/export_exet_lufz.js'
+      - 'scripts/crossword_lexicon.py'
+      - 'scripts/test_export_exet_lufz.js'
+      - '.github/workflows/verify-lufz.yml'
+  workflow_dispatch:
+
+jobs:
+  verify-lufz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch upstream Lufz lexicon (do not commit data)
+        run: |
+          curl --fail --location --retry 3 --silent --show-error \
+            https://raw.githubusercontent.com/viresh-ratnakar/exet/master/lufz-en-lexicon.js \
+            --output /tmp/lufz-en-lexicon.js
+          test "$(wc -c </tmp/lufz-en-lexicon.js)" -gt 1000000
+      - name: Export scored words
+        run: |
+          node scripts/export_exet_lufz.js /tmp/lufz-en-lexicon.js /tmp/lufz.tsv
+      - name: Validate import and British spelling coverage
+        run: |
+          PYTHONPATH=scripts python - <<'PY'
+          from crossword_lexicon import load_scored_tsv, export_solver_dictionary
+          scores=load_scored_tsv('/tmp/lufz.tsv')
+          assert len(scores)>100000, f'Only {len(scores)} distinct entries'
+          assert 'COLOUR' in scores, 'Missing British spelling COLOUR'
+          assert 'HONOUR' in scores, 'Missing British spelling HONOUR'
+          count=export_solver_dictionary(scores,'/tmp/lufz-words.txt',minimum_score=80)
+          assert count>10000, f'Only {count} entries at score >= 80'
+          print(f'Imported {len(scores)} unique answers, {count} at >=80')
+          print(f'COLOUR score: {scores["COLOUR"]}')
+          print(f'HONOUR score: {scores["HONOUR"]}')
+          PY
