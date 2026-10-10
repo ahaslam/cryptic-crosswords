@@ -3,8 +3,11 @@
 ## Purpose
 
 Evaluate **properties**, not similarity to any particular published black-square
-layout. The initial reference set comprises six user-provided Sunday Times grid
-photographs (pages 73, 75, 76, 77, 87 and 91). These are reference observations,
+layout. The initial photographic reference set comprises six user-provided Sunday Times
+grid photographs (pages 73, 75, 76, 77, 87 and 91). Two have been transcribed
+into the independent reference dataset so far: pages 87 and 91. Page 91 has
+two edge cells resolved using its rotational symmetry; retain this provenance
+rather than presenting that inference as independently observed. These are reference observations,
 not reusable templates. No photograph or copyrighted puzzle is vendored.
 
 ## Measurements
@@ -36,3 +39,4 @@ validate the transcription against visible numbering, and compute the same
 metrics. Compare *distributions* against generated grids. Hold back at least
 some examples for out-of-sample checks as more references arrive. Do not
 hardcode their exact black-square arrangements into the generator.
+\n## Running the comparison\n\n`python scripts/compare_grid_quality.py` compares the transcribed references\nagainst six generated seeds. This is descriptive, not a pass/fail threshold.\nThe remaining four photographed grids still require careful transcription and\nverification; two references are insufficient to calibrate final weights.\n
