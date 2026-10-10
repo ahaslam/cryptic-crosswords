@@ -116,6 +116,9 @@ jobs:
               for t in r['trials']:
                   out.write(f"| {t['seed']} | {t.get('entries','—')} | {t['status']} | {t.get('fill_seconds',t.get('feasibility_seconds','—'))} |\n")
           PY
+      - name: Show CSP draft answers
+        run: |
+          python -c "import json; r=json.load(open('/tmp/lufz-top-csp.json')); print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))"
       - name: Publish controlled solver comparison
         run: |
           python - <<'PY'
