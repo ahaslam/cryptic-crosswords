@@ -42,4 +42,21 @@ class FillTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 fill(['...']*3,dictionary,min_score=3.0)
 
+    def test_limited_rare_word_exceptions(self):
+        with tempfile.TemporaryDirectory() as d:
+            dictionary=Path(d)/'words.txt'
+            dictionary.write_text('ABC\nDEF\nGHI\nADG\nBEH\nCFI\n')
+            scores={w:4.0 for w in ('ABC','DEF','GHI','ADG','BEH')}
+            scores['CFI']=2.2
+            puzzle,_=fill(['...']*3,dictionary,max_nodes=1000,
+                          word_scores=scores,min_score=2.0,
+                          preferred_score=3.0,max_exceptions=1)
+            answers=[c['answer'] for group in puzzle['clues'].values() for c in group]
+            self.assertEqual(len(answers),6)
+            self.assertEqual(sum(scores[w]<3.0 for w in answers),1)
+            with self.assertRaises(RuntimeError):
+                fill(['...']*3,dictionary,max_nodes=1000,
+                     word_scores=scores,min_score=2.0,
+                     preferred_score=3.0,max_exceptions=0)
+
 if __name__=='__main__':unittest.main()
