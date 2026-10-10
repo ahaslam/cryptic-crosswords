@@ -28,6 +28,20 @@ def summary(path):
             lines.extend(["",f"**Selected fill:** {t.get('selected','?')}  ",
                           f"**Uncommon answers:** {t.get('exception_count','?')}  ",
                           f"**Quality target met:** {t.get('quality_target_met','?')}"])
+            baseline=t.get('baseline_quality')
+            improved=t.get('improved_quality')
+            if baseline is not None:
+                lines.extend(["", "**Same-grid vocabulary comparison**", "",
+                              "| Fill strategy | Uncommon answers | Mean word frequency |",
+                              "|---|---:|---:|",
+                              f"| Unrestricted baseline | {baseline['exception_count']} | {baseline['mean_frequency']} |"])
+                if improved is not None:
+                    lines.append(f"| Frequency-constrained | {improved['exception_count']} | {improved['mean_frequency']} |")
+                    delta=baseline['exception_count']-improved['exception_count']
+                    lines.append(f"\\n**Same-grid improvement:** {delta:+d} fewer uncommon answers with the constrained fill.")
+                else:
+                    lines.append("| Frequency-constrained | No complete fill | — |")
+                    lines.append("\\n**Same-grid improvement:** Not measurable: constrained fill did not complete.")
             exceptions=t.get('exceptions',[])
             if exceptions:
                 lines.append("\n**Answers requiring review:** "+", ".join(
