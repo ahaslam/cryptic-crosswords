@@ -1,0 +1,27 @@
+"""Tests for crossword fill mechanics (synthetic letter sequences, not publishable words)."""
+import tempfile
+import unittest
+from pathlib import Path
+from fill_grid import fill, slots_of
+
+class FillTests(unittest.TestCase):
+    def test_numbering(self):
+        slots=slots_of(['...','...','...'])
+        self.assertEqual(len(slots),6)
+        self.assertEqual([s[1] for s in slots if s[0]=='across'],[1,4,5])
+        self.assertEqual([s[1] for s in slots if s[0]=='down'],[1,2,3])
+
+    def test_crossings_and_unique_entries(self):
+        with tempfile.TemporaryDirectory() as d:
+            dictionary=Path(d)/'words.txt'
+            dictionary.write_text('ABC\nDEF\nGHI\nADG\nBEH\nCFI\n')
+            puzzle,nodes=fill(['...']*3,dictionary,seed=0,max_nodes=1000)
+            self.assertEqual(len(puzzle['clues']['across']),3)
+            self.assertEqual(len(puzzle['clues']['down']),3)
+            self.assertEqual(len({c['answer'] for direction in puzzle['clues'].values() for c in direction}),6)
+            for direction,dr,dc in [('across',0,1),('down',1,0)]:
+                for clue in puzzle['clues'][direction]:
+                    for i,ch in enumerate(clue['answer']):
+                        self.assertEqual(puzzle['grid'][clue['row']+i*dr][clue['col']+i*dc],ch)
+
+if __name__=='__main__':unittest.main()
