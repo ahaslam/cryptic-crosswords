@@ -40,13 +40,13 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0):
         except RuntimeError as exc:
             return {'status':'unfilled','seed':seed,'pattern':pattern,
                     'entries':len(slots(pattern)),'dictionary_words':len(words),'eligible_words':eligible,
-            'min_frequency':min_frequency,'eligible_words':eligible,
                     'min_frequency':min_frequency,
                     'grid_seconds':round(grid_seconds,2),
                     'fill_seconds':round(time.monotonic()-fill_started,2),
                     'max_nodes':max_nodes,'reason':str(exc)}
     return {'status':'filled_unreviewed','seed':seed,'pattern':pattern,
             'entries':len(slots(pattern)),'dictionary_words':len(words),
+            'eligible_words':eligible,'min_frequency':min_frequency,
             'grid_seconds':round(grid_seconds,2),
             'fill_seconds':round(time.monotonic()-fill_started,2),
             'nodes':nodes,'draft':result}
