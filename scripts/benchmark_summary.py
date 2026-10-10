@@ -23,11 +23,35 @@ def summary(path):
         secs=t.get('feasibility_seconds',t.get('fill_seconds','—'))
         lines.append(f"| {t.get('seed','?')} | {t.get('entries','?')} | "
                      f"{t.get('status','?')} | {nodes} | {secs} |")
+    pairs=[t for t in data.get('trials',[]) if t.get('paired_selection')]
+    if pairs:
+        lines.extend(["", "**Paired grid-selection audit (same candidate pools)**", "",
+                      "| Trial | Geometric seed | Vocabulary seed | Same grid? |",
+                      "|---:|---:|---:|---|"])
+        for t in pairs:
+            pair=t['paired_selection']
+            lines.append(f"| {t.get('seed','?')} | {pair['geometric_seed']} | "
+                         f"{pair['vocabulary_seed']} | {pair['same_grid']} |")
+        lines.append("\\nThis compares grid selection only, not fill outcomes for both strategies.")
     for t in data.get('trials',[]):
         if t.get('status')=='filled_unreviewed':
             lines.extend(["",f"**Selected fill:** {t.get('selected','?')}  ",
                           f"**Uncommon answers:** {t.get('exception_count','?')}  ",
                           f"**Quality target met:** {t.get('quality_target_met','?')}"])
+            baseline=t.get('baseline_quality')
+            improved=t.get('improved_quality')
+            if baseline is not None:
+                lines.extend(["", "**Same-grid vocabulary comparison**", "",
+                              "| Fill strategy | Uncommon answers | Mean word frequency |",
+                              "|---|---:|---:|",
+                              f"| Unrestricted baseline | {baseline['exception_count']} | {baseline['mean_frequency']} |"])
+                if improved is not None:
+                    lines.append(f"| Frequency-constrained | {improved['exception_count']} | {improved['mean_frequency']} |")
+                    delta=baseline['exception_count']-improved['exception_count']
+                    lines.append(f"\n**Same-grid improvement:** {delta:+d} fewer uncommon answers with the constrained fill.")
+                else:
+                    lines.append("| Frequency-constrained | No complete fill | — |")
+                    lines.append("\n**Same-grid improvement:** Not measurable: constrained fill did not complete.")
             exceptions=t.get('exceptions',[])
             if exceptions:
                 lines.append("\n**Answers requiring review:** "+", ".join(

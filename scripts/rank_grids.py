@@ -35,3 +35,29 @@ def candidates(seed, count=8, attempts=20000):
 def select(seed,count=8,attempts=20000):
     _,candidate_seed,pattern=candidates(seed,count,attempts)[0]
     return pattern,candidate_seed,metrics(pattern)
+
+def vocabulary_metrics(grid, common_counts):
+    """Estimate slot difficulty from available common-word counts by length.
+
+    Uses dictionary counts only; it does not claim a pattern is solvable.
+    """
+    import math
+    lengths=[len(entry) for entry in slots(grid)]
+    # Penalise scarcity multiplicatively: ten available words is much harder
+    # than ten thousand, particularly for longer crossing entries.
+    scarcity=sum(1.0/math.log1p(max(1,common_counts.get(length,0)))
+                 for length in lengths)
+    return {'vocabulary_scarcity':round(scarcity,4),
+            'least_common_candidates':min(common_counts.get(n,0) for n in lengths)}
+
+def select_vocabulary(seed,common_counts,count=8,attempts=20000):
+    """Rank exactly the same candidates as select(), using vocabulary scarcity."""
+    options=candidates(seed,count,attempts)
+    scored=[]
+    for _,candidate_seed,pattern in options:
+        vm=vocabulary_metrics(pattern,common_counts)
+        # Keep a modest geometric tie-breaker while prioritising vocabulary.
+        score=vm['vocabulary_scarcity']+metrics(pattern)['score']/1000
+        scored.append((score,candidate_seed,pattern,vm))
+    _,chosen,pattern,vm=min(scored,key=lambda x:(x[0],x[1]))
+    return pattern,chosen,{**metrics(pattern),**vm}
