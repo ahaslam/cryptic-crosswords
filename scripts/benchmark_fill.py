@@ -12,7 +12,7 @@ from pathlib import Path
 from fill_grid import fill
 from generate_grid import generate, slots
 from rank_grids import select, metrics
-from answer_suitability import assess
+from answer_suitability import assess as assess_suitability
 
 DIFFICULTY_PRESETS = {
     'accessible': {'cmu_min': 3.5, 'cmu_floor': 2.5, 'lufz_min': 85.0, 'lufz_floor': 60.0, 'max_exceptions': 2},
@@ -50,7 +50,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
     # Preserve raw scores for reporting and exception budgets; use a separate
     # difficulty-sensitive preference for candidate ordering in the CSP solver.
     score_scale=100.0 if scored_dictionary else 7.0
-    suitability_scores={w:assess(w,max(0,min(1,v/score_scale)),difficulty).score
+    suitability_scores={w:assess_suitability(w,max(0,min(1,v/score_scale)),difficulty).score
                         for w,v in scores.items()}
     eligible=sum(v>=min_frequency for v in scores.values())
     allowed=sum(v>=exception_floor for v in scores.values())
