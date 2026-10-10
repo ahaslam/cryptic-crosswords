@@ -45,3 +45,39 @@ These are **unreviewed answers**. No clue is approved for publication.
 All six are **candidate clues**, not signed-off clues. Several need polishing;
 the remaining twenty require independent clue construction. Avoid publishing
 until wordplay, definition, grammar, enumeration and crossing letters are checked.
+
+## Calibration standard (experienced British cryptic solvers)
+
+Reference constructions supplied by the solver:
+- "Lush large visor, as it were (2,2,5)" = SOT + OS (outsize) + PEAK -> SO TO SPEAK.
+- "Greet large cook outside (6)" = SAUTÉ around L -> SALUTE.
+- "H I J K L M N O (5)" = H to O -> H2O -> WATER.
+- "2 girls on each knee (7)" = PAT + ELLA -> PATELLA.
+
+Editorial bar: concise plausible surfaces, exact assembly, inventive misdirection,
+occasional lateral clues. Familiar answer vocabulary does not imply easy clueing.
+
+## First stronger clue candidates — independently review before use
+
+These are proposed cryptic clues with explicit letter-level derivations.
+No editorial sign-off is implied.
+
+| Entry | Proposed clue | Wordplay check | Editorial note |
+|---|---|---|---|
+| 2 Down SPOT (4) | Place where pots are regularly overturned (4) | POT + S? Not exact | REJECT — invalid construction |
+| 5 Down TYPE (4) | Sort of printing character (4) | Double definition: sort / printing character | REJECT — too literal |
+| 14 Down ACT (3) | Performance of a deed (3) | Double definition: performance / deed | REJECT — too literal |
+| 16 Down CAN (3) | Able to preserve food? (3) | Double definition: able to / preserve in a can | REVIEW — economical but perhaps too obvious |
+| 19 Down BASIL (5) | Herb that sounds like a fellow in Fawlty Towers (5) | Definition herb; name reference, no separate cryptic wordplay | REJECT — too literal |
+
+### Clue acceptance checklist
+
+1. Confirm definition matches answer exactly in context.
+2. Spell out every wordplay operation and letter sequence; reject near-misses.
+3. Confirm natural, convincing surface that does not advertise the answer.
+4. Confirm clue is not merely two obvious dictionary definitions.
+5. Confirm no ambiguous abbreviation or unchecked synonym.
+6. Record device, explanation and independent reviewer; keep fairness_reviewed false until checked.
+7. If an entry cannot support an engaging clue, request a new answer/fill.
+
+**Status:** Editorial calibration recorded. No clues approved; do not publish.
