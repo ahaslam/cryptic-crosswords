@@ -12,6 +12,11 @@ class WordIndexTests(unittest.TestCase):
         self.assertEqual(set(self.index.candidates('CA.',set())),{'CAT','CAR'})
         self.assertEqual(self.index.candidates('C.Z',set()),[])
 
+    def test_candidates_are_sorted_even_after_set_intersection(self):
+        self.assertEqual(self.index.candidates('...',set()),['BAR','BAT','CAR','CAT','RAT'])
+        self.assertEqual(self.index.candidates('CA.',set()),['CAR','CAT'])
+        self.assertEqual(self.index.candidates('.A.',{'BAR'}),['BAT','CAR','CAT','RAT'])
+
     def test_exclusion_and_length(self):
         self.assertEqual(self.index.candidates('CAR',{'CAR'}),[])
         self.assertEqual(self.index.candidates('CART',set()),['CART'])
