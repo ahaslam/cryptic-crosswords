@@ -29,7 +29,7 @@ function exportLexicon(source, destination) {
     const answer = word.toUpperCase().replace(/[^A-Z]/g, '');
     if (answer.length < 3 || answer.length > 15) continue;
     const score = Math.round(100 * (1 - (i - 1) / Math.max(1, count - 1)));
-    lines.push(word.replace(/[\\t\\r\\n]/g, ' ') + '\\t' + score);
+    lines.push(word.replace(/[\t\r\n]/g, ' ') + '\t' + score);
   }
   fs.writeFileSync(destination, lines.join('\n') + '\n', 'utf8');
   return lines.length;
