@@ -125,12 +125,20 @@ jobs:
           kept=[row for row in rows if row.split('\t',1)[0] not in rejected]
           Path('/tmp/lufz-reviewed.tsv').write_text('\n'.join(kept)+'\n')
           print('Excluded',len(rows)-len(kept),'editorially problematic answers')
+          assert not any(row.split('\t',1)[0] in rejected for row in kept)
           PY
           python scripts/benchmark_fill.py --solver csp \
             --scored-dictionary /tmp/lufz-reviewed.tsv \
             --min-frequency 80 --exception-floor 80 \
             --seed 0 --grid-trials 4 --grid-candidates 8 --max-nodes 16000 \
             --report /tmp/lufz-reviewed-csp.json
+      - name: Archive editorial candidate draft
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lufz-reviewed-csp-draft
+          path: /tmp/lufz-reviewed-csp.json
+          if-no-files-found: warn
       - name: Report quality-filtered CSP answers
         run: |
           python -c "import json; r=json.load(open('/tmp/lufz-reviewed-csp.json')); print('QUALITY FILTERED STATUS:',r['status']); print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))"
