@@ -123,7 +123,7 @@ jobs:
           import sys
           sys.path.insert(0,'scripts')
           from crossword_lexicon import normalize_answer
-          rejected={'LIETO','HADTO','THEREST','INNEED','THEEND','AHOM','SNELL','KEAN','AHERN','HDMI','EST','HASTA','BAUM','ROSEANNE','MURIEL','CASTRO','AMOS','ALI','ESSEN','TRONDHEIM','MISSOURI','CARTER','ADAMS','AMIGA','SPITHEAD','NORTHSEA','FOLLOWUP','ISHTAR','GLEECLUB','GRIMALDI','NON','ARG','MANTEGNA','KINABALU','NEK','MBA','ASHANTI','EIFEL'}
+          rejected={'LIETO','HADTO','THEREST','INNEED','THEEND','AHOM','SNELL','KEAN','AHERN','HDMI','EST','HASTA','BAUM','ROSEANNE','MURIEL','CASTRO','AMOS','ALI','ESSEN','TRONDHEIM','MISSOURI','CARTER','ADAMS','AMIGA','SPITHEAD','NORTHSEA','FOLLOWUP','ISHTAR','GLEECLUB','GRIMALDI','NON','ARG','MANTEGNA','NEK','MBA','EIFEL'}
           rows=Path('/tmp/lufz-top.tsv').read_text().splitlines()
           kept=[row for row in rows if normalize_answer(row.split('\t',1)[0]) not in rejected]
           Path('/tmp/lufz-reviewed.tsv').write_text('\n'.join(kept)+'\n')
