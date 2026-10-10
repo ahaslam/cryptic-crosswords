@@ -12,10 +12,10 @@ def metrics(grid):
     crossing_counts=Counter(cell for entry in entries for cell in entry)
     # Very long answers are relatively scarce in ordinary dictionaries.
     # Dense intersections make early word choices constrain many other slots.
-    long_excess=sum(max(0,length-9)**2 for length in lengths)
+    long_excess=sum(max(0,length-13)**2 for length in lengths)
     short_entries=sum(length==3 for length in lengths)
     crossing_ratio=sum(count==2 for count in crossing_counts.values())/len(crossing_counts)
-    score=long_excess*4+short_entries*2+crossing_ratio*20
+    score=long_excess*4+short_entries*8+crossing_ratio*20+abs(len(entries)-28)*5
     return {'score':round(score,3),'long_excess':long_excess,
             'three_letter_entries':short_entries,
             'crossing_ratio':round(crossing_ratio,3),
