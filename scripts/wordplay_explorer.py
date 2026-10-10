@@ -21,6 +21,11 @@ def verify(answer, mechanism, fodder, *, container=None, position=None):
             return False
         source = clean(container)
         return Counter(source) == Counter(answer) + Counter(fodder) and len(source) == len(answer) + len(fodder)
+    if mechanism == "subtractive-anagram":
+        if container is None:
+            return False
+        source = clean(container)
+        return Counter(source) == Counter(answer) + Counter(fodder) and len(source) == len(answer) + len(fodder)
     if mechanism == "charade":
         return fodder == answer
     if mechanism == "container":
