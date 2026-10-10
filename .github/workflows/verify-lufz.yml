@@ -120,7 +120,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          rejected={'LIETO','HADTO','THEREST','INNEED','THEEND','AHOM','SNELL','KEAN','AHERN','HDMI','EST','HASTA','BAUM','ROSEANNE','MURIEL','CASTRO','AMOS','ALI','ESSEN','TRONDHEIM','MISSOURI','CARTER','ADAMS','AMIGA','SPITHEAD','NORTHSEA','FOLLOWUP'}
+          rejected={'LIETO','HADTO','THEREST','INNEED','THEEND','AHOM','SNELL','KEAN','AHERN','HDMI','EST','HASTA','BAUM','ROSEANNE','MURIEL','CASTRO','AMOS','ALI','ESSEN','TRONDHEIM','MISSOURI','CARTER','ADAMS','AMIGA','SPITHEAD','NORTHSEA','FOLLOWUP','ISHTAR','GLEECLUB','GRIMALDI','NON','ARG'}
           rows=Path('/tmp/lufz-top.tsv').read_text().splitlines()
           kept=[row for row in rows if row.split('\t',1)[0] not in rejected]
           Path('/tmp/lufz-reviewed.tsv').write_text('\n'.join(kept)+'\n')
