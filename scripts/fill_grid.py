@@ -62,12 +62,18 @@ def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=N
         if len(assigned)==len(slots): return True
         if nodes>=max_nodes:return False
         options=[]
+        unavoidable_exceptions=0
         for i in range(len(slots)):
             if i in assigned:continue
             possible=candidates(i)
             if max_exceptions is not None and exceptions_used >= max_exceptions:
                 possible=[w for w in possible if word_scores.get(w,0)>=preferred_score]
             if not possible:return False
+            if max_exceptions is not None and not any(
+                    word_scores.get(w,0)>=preferred_score for w in possible):
+                unavoidable_exceptions+=1
+                if exceptions_used+unavoidable_exceptions>max_exceptions:
+                    return False
             options.append((len(possible),-degree[i],i,possible))
         _,_,i,possible=min(options,key=lambda x:(x[0],x[1],x[2]))
         if word_scores is None:
