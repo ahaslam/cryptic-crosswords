@@ -1,14 +1,14 @@
 # Crossword difficulty: generator and editorial specification
 
-Status: proposed implementation specification. Difficulty is a **puzzle-level generation input**, not a post-hoc label.
+Status: proposed implementation specification. Difficulty is a **puzzle-level generation input**, not a post-hoc label. **The scale is uncalibrated**: vocabulary scores and clue heuristics are not empirical measures of solving difficulty. The Sunday Times cryptic should be treated as an upper-range reference, not the definition of Standard.
 
 ## Levels
 
 | Level | Audience | Answer selection | Clue construction |
 |---|---|---|---|
 | accessible | Newer cryptic solvers | Common, familiar British English; very few proper nouns | Transparent definitions; conventional anagrams, containers, reversals, charades and hidden words; fewer nested operations |
-| standard | Regular solvers | Broad familiar vocabulary; occasional fair specialist reference | Varied devices and moderate surface misdirection; occasional multi-step construction |
-| challenging | Experienced solvers | Still fair and clueable; broader vocabulary without arbitrary obscurity | Greater semantic misdirection, sophisticated surfaces and well-signalled multi-step wordplay |
+| standard | Regular solvers; below the typical Sunday Times challenge | Broad familiar vocabulary; occasional fair specialist reference | Varied devices and moderate surface misdirection; occasional multi-step construction |
+| challenging | Experienced solvers; Sunday Times-style difficulty is a reference near this end | Still fair and clueable; broader vocabulary without arbitrary obscurity | Greater semantic misdirection, sophisticated surfaces and well-signalled multi-step wordplay |
 
 ## Contract
 
@@ -21,13 +21,13 @@ Status: proposed implementation specification. Difficulty is a **puzzle-level ge
 - Solvers should be able to choose difficulty without knowing crossword jargon. A short description of each level is sufficient.
 - Do not claim calibrated difficulty until real solvers have tested multiple puzzles. Record solver feedback and adjust the bands empirically.
 
-## Suggested initial tuning (not yet calibrated)
+## Suggested initial vocabulary tuning (not a clue-difficulty calibration)
 
 Accessible: preferred Lufz score >= 85, uncommon-answer budget <= 2.
 Standard: preferred score >= 80, uncommon-answer budget <= 5.
 Challenging: preferred score >= 75, uncommon-answer budget <= 6.
 
-These numbers are **starting hypotheses**, not guarantees of clue quality or objective difficulty. Keep an independent editorial veto over awkward answers.
+These numbers are **starting hypotheses about answer accessibility**, not guarantees of clue quality or objective difficulty. A hard cryptic should not be made hard merely by increasing obscurity. Treat clue difficulty as a separate, editorially reviewed dimension. Compare a sample of real published puzzles and gather solver feedback before attaching confident labels. Keep an independent editorial veto over awkward answers.
 
 ## Acceptance tests
 
