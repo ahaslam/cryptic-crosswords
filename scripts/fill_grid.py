@@ -26,7 +26,7 @@ def slots_of(grid):
             slots.append((direction,number,r,c,cells))
     return slots
 
-def fill(pattern,dictionary,seed=0,max_nodes=250000):
+def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=None):
     n=len(pattern)
     if n<3 or any(len(row)!=n or any(ch not in '#.' for ch in row) for row in pattern):
         raise ValueError('Expected square pattern of # and .')
@@ -36,6 +36,13 @@ def fill(pattern,dictionary,seed=0,max_nodes=250000):
         word=raw.strip().upper()
         if re.fullmatch('[A-Z]+',word) and len(word) in lengths: words[len(word)].add(word)
     if any(not words[length] for length in lengths): raise ValueError('Dictionary lacks required word lengths')
+    if min_score is not None and word_scores is None:
+        raise ValueError('min_score requires word_scores')
+    if word_scores is not None:
+        words={length:{w for w in pool if min_score is None or word_scores.get(w,0)>=min_score}
+               for length,pool in words.items()}
+        if any(not words[length] for length in lengths):
+            raise ValueError('Quality filter removed every candidate for a required length')
     index=WordIndex(words)
     board=[list(row) for row in pattern];used=set();assigned={};rng=random.Random(seed);nodes=0
     def candidates(i):
@@ -52,7 +59,11 @@ def fill(pattern,dictionary,seed=0,max_nodes=250000):
             if not possible:return False
             options.append((len(possible),i,possible))
         _,i,possible=min(options,key=lambda x:(x[0],x[1]))
-        rng.shuffle(possible)
+        if word_scores is None:
+            rng.shuffle(possible)
+        else:
+            # Most familiar candidates first; ties stable for reproducible results.
+            possible.sort(key=lambda w:(-word_scores.get(w,0),w))
         for word in possible:
             nodes+=1;changed=[]
             for (r,c),ch in zip(slots[i][4],word):
