@@ -139,6 +139,40 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     quality_status='filled_unreviewed'
             except RuntimeError:
                 pass
+            # Diversify the *long* slots directly. A whole-grid score alone
+            # tends to change only short fillers because the first long entries
+            # determine many crossings. Explore alternative first branches by
+            # downweighting each long answer in the incumbent fill.
+            long_variants=[]
+            if improved is not None and difficulty=='accessible':
+                incumbent=improved
+                long_answers=sorted(
+                    {c['answer'] for group in incumbent['clues'].values()
+                     for c in group if len(c['answer'])>=10},
+                    key=lambda w:(w not in ('MANIFESTATIONS','CHARACTERISTICS',
+                                            'ESTABLISHMENTS','AFOREMENTIONED'),
+                                  -len(w),w))
+                for target in long_answers[:4]:
+                    variant_scores=suitability_scores.copy()
+                    variant_scores[target]=variant_scores.get(target,0)-200
+                    try:
+                        variant,nodes=fill(
+                            pattern,dictionary,seed=trial_seed,max_nodes=budget,
+                            word_scores=scores,min_score=exception_floor,
+                            preferred_score=min_frequency,max_exceptions=max_exceptions,
+                            solver=solver,ranking_scores=variant_scores,
+                            editorial_order=4)
+                        long_variants.append({
+                            'target':target,'nodes':nodes,
+                            'editorial':score_draft(variant),
+                            'changed':target not in {
+                                c['answer'] for group in variant['clues'].values()
+                                for c in group}})
+                        if score_draft(variant)['score']>score_draft(improved)['score']:
+                            improved=variant
+                            quality_nodes=nodes
+                    except RuntimeError:
+                        long_variants.append({'target':target,'status':'unfilled'})
             quality_seconds=round(time.monotonic()-quality_started,2)
 
             def assess(draft):
@@ -188,6 +222,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                            'quality_status':quality_status,'quality_nodes':quality_nodes,
                            'quality_seconds':quality_seconds,
                            'alternate_nodes':alternate_nodes,
+                           'long_variants':long_variants,
                            'alternate_editorial':score_draft(alternate) if alternate else None,
                            'baseline_quality':baseline_quality,
                            'improved_quality':improved_quality,
