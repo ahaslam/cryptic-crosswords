@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Find a complete 50–55-entry draft first, then attempt vocabulary improvement.
+"""Find a complete 26–30-entry draft first, then attempt vocabulary improvement.
 
 Requires cmudict and wordfreq. Produces an unreviewed draft, never a public puzzle.
 """
@@ -22,7 +22,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
         raise ValueError('Invalid grid selection settings')
     if grid_trials<1 or max_nodes<grid_trials:
         raise ValueError('max_nodes must be >= grid_trials >= 1')
-    if not 0<=max_exceptions<=55 or exception_floor>min_frequency:
+    if not 0<=max_exceptions<=60 or exception_floor>min_frequency:
         raise ValueError('Invalid exception settings')
     if scored_dictionary is not None:
         from crossword_lexicon import load_scored_tsv
@@ -61,8 +61,8 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 trials.append({'seed':trial_seed,'status':'grid_failed','reason':str(exc)})
                 continue
             entry_count=len(slots(pattern))
-            if not 50<=entry_count<=55:
-                raise AssertionError('Generated grid violates 50–55 entry contract')
+            if not 26<=entry_count<=30:
+                raise AssertionError('Generated grid violates 26–30 entry contract')
             started=time.monotonic()
             # Phase 1: prefer common entries for Lufz to limit branching.
             # Keep CMUdict baseline unchanged for a controlled comparison.
