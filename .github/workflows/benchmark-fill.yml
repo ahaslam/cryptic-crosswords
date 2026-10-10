@@ -69,6 +69,10 @@ jobs:
             --max-exceptions "$MAX_EXCEPTIONS" --exception-floor "$EXCEPTION_FLOOR" \
             --grid-strategy "$GRID_STRATEGY" --grid-candidates "$GRID_CANDIDATES" \
             --report fill-benchmark.json
+      - name: Compare grid ranking strategies
+        run: |
+          python scripts/compare_rankings.py --output ranking-comparison.json \
+            >> "$GITHUB_STEP_SUMMARY"
       - name: Publish benchmark summary
         if: always()
         run: python scripts/benchmark_summary.py fill-benchmark.json >> "$GITHUB_STEP_SUMMARY"
@@ -76,7 +80,7 @@ jobs:
         if: always()
         with:
           name: fill-benchmark
-          path: fill-benchmark.json
+          path: |\n            fill-benchmark.json\n            ranking-comparison.json
           if-no-files-found: warn
       - name: Post results on pull request
         if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
