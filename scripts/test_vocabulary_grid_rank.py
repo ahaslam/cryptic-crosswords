@@ -1,5 +1,5 @@
 import unittest
-from vocabulary_grid_rank import vocabulary_metrics, select_vocabulary_aware
+from vocabulary_grid_rank import vocabulary_metrics, select_vocabulary_aware, crossing_feasibility
 from generate_grid import generate
 from rank_grids import metrics
 
@@ -8,6 +8,14 @@ class VocabularyGridRankTests(unittest.TestCase):
         grid=generate(seed=0)
         v=vocabulary_metrics(grid,{'CAT':90},85,2)
         self.assertGreater(v['forced_exceptions_lower_bound'],2)
+
+    def test_crossing_domains_detect_incompatible_letters(self):
+        grid=generate(seed=0)
+        incompatible={'Z'*n:90 for n in range(3,16)}
+        # A uniform-letter dictionary is crossing-compatible even if tiny.
+        compatible=crossing_feasibility(grid,incompatible)
+        self.assertEqual(compatible['empty_preferred_domains'],0)
+        self.assertGreater(compatible['crossing_scarcity'],0)
 
     def test_selection_is_deterministic(self):
         a=generate(seed=0)
