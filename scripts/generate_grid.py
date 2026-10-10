@@ -81,7 +81,8 @@ def generate(seed=0, attempts=20000, min_clues=26, max_clues=30):
     pairs = [(r, c) for r in range(N) for c in range(N)
              if (r, c) <= (N-1-r, N-1-c)]
     best = None
-    for trial in range(max(1, attempts)):
+    # Limit preferred-count exploration so low-count fallbacks remain fast.
+    for trial in range(min(max(1, attempts), 24)):
         variant = (seed + trial) % 4
         grid = _lattice(bool(variant & 1), bool(variant & 2))
         if not _structural(grid):
