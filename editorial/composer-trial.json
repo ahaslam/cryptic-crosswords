@@ -1,0 +1,43 @@
+[
+  {
+    "answer": "SPOT",
+    "clue": "Under tops looking back is a stain (4)",
+    "device": "reversal",
+    "definition": "a stain",
+    "parse": "TOPS reversed = SPOT",
+    "surface_story": "Looking beneath clothing for a stain",
+    "fodder": "TOPS",
+    "editorial_status": "draft"
+  },
+  {
+    "answer": "SPOT",
+    "clue": "Place for pots to be rearranged (4)",
+    "device": "anagram",
+    "definition": "Place",
+    "parse": "POTS rearranged = SPOT",
+    "surface_story": "Rearranging kitchen pots",
+    "fodder": "POTS",
+    "editorial_status": "reject: obvious"
+  },
+  {
+    "answer": "SPOT",
+    "clue": "A blemish, or a location (4)",
+    "device": "double-definition",
+    "definition": "blemish / location",
+    "parse": "Both senses define SPOT",
+    "surface_story": "Plain contrast of senses",
+    "editorial_status": "reject: literal"
+  },
+  {
+    "answer": "GOOD",
+    "clue": "Fine god embracing love (4)",
+    "device": "container",
+    "definition": "Fine",
+    "parse": "GOD around O at index 1 = GOOD",
+    "surface_story": "A deity accepting love",
+    "fodder": "O",
+    "container": "GOD",
+    "position": 1,
+    "editorial_status": "draft"
+  }
+]

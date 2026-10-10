@@ -5,9 +5,10 @@ letter constraints between crossing slots after each assignment. A node is a
 branch choice, not an individual arc revision.
 """
 from collections import defaultdict, deque
+from grid_editorial_quality import candidate_penalty
 
 def solve_csp(slots, words_by_length, scores=None, preferred_score=None,
-              max_exceptions=None, max_nodes=10000):
+              max_exceptions=None, max_nodes=10000, ranking_scores=None, editorial_order=False):
     domains=[set(words_by_length[len(slot[4])]) for slot in slots]
     crossing=defaultdict(list)
     for i,slot in enumerate(slots):
@@ -67,7 +68,10 @@ def solve_csp(slots, words_by_length, scores=None, preferred_score=None,
                 return None
         i=min((i for i in range(len(ds)) if i not in assigned),
               key=lambda i:(len(ds[i]),-len(neighbors[i]),i))
-        options=sorted(ds[i],key=lambda w:(-scores.get(w,0),w) if scores is not None else (w,))
+        order=ranking_scores if ranking_scores is not None else scores
+        options=sorted(ds[i],key=lambda w:(
+            -(order.get(w,0) if order is not None else 0)
+            +(candidate_penalty(w,used) * (editorial_order if isinstance(editorial_order,(int,float)) else 1) if editorial_order else 0),w))
         for word in options:
             rare=(max_exceptions is not None and scores.get(word,0)<preferred_score)
             if rare and rare_used>=max_exceptions:

@@ -1,0 +1,82 @@
+{
+  "trial": "accessible-seed-2019",
+  "reviewed": false,
+  "candidates": [
+    {
+      "entry": "23 Across",
+      "answer": "TWO",
+      "clue": "Couple caught in network (3)",
+      "device": "hidden",
+      "fodder": "NETWORK",
+      "definition": "Couple",
+      "parse": "ne[TWO]rk",
+      "surface_story": "A couple caught up in a network",
+      "strength": "Promising: natural compact surface",
+      "risk": "Hidden answer may be spotted quickly"
+    },
+    {
+      "entry": "19 Down",
+      "answer": "BASIL",
+      "clue": "Herb concealed in Cuba's illicit exports (5)",
+      "device": "hidden",
+      "fodder": "CUBAS ILLICIT EXPORTS",
+      "definition": "Herb",
+      "parse": "Cu[BAS IL]licit",
+      "surface_story": "Illicit Cuban exports",
+      "strength": "Good coherent surface with word boundary concealment",
+      "risk": "Concealed in is a standard overt hidden indicator"
+    },
+    {
+      "entry": "10 Across",
+      "answer": "VIP",
+      "clue": "Big shot: vice-president embraces one (3)",
+      "device": "container",
+      "fodder": "I",
+      "container": "VP",
+      "position": 1,
+      "definition": "Big shot",
+      "parse": "V(I)P",
+      "surface_story": "A vice-president welcoming an individual",
+      "strength": "Concise plausible surface",
+      "risk": "VP abbreviation must be acceptable"
+    },
+    {
+      "entry": "21 Across",
+      "answer": "GOOD",
+      "clue": "Fine god embracing love (4)",
+      "device": "container",
+      "fodder": "O",
+      "container": "GOD",
+      "position": 1,
+      "definition": "Fine",
+      "parse": "G(O)OD",
+      "surface_story": "A god embracing love",
+      "strength": "Clean containment",
+      "risk": "Slightly abstract surface"
+    },
+    {
+      "entry": "22 Down",
+      "answer": "OURS",
+      "clue": "Belonging to us, hours reportedly (4)",
+      "device": "homophone",
+      "fodder": "HOURS",
+      "definition": "Belonging to us",
+      "parse": "HOURS pronounced OURS in non-rhotic British English",
+      "surface_story": "An observation about shared hours",
+      "strength": "Sound cryptic mechanism",
+      "risk": "Surface is weak; dialect-sensitive; not ready"
+    },
+    {
+      "entry": "2 Down",
+      "answer": "SPOT",
+      "clue": "Under tops looking back is a stain (4)",
+      "device": "reversal",
+      "fodder": "TOPS",
+      "definition": "a stain",
+      "parse": "TOPS reversed = SPOT",
+      "surface_story": "Inspecting clothes for stains",
+      "strength": "Collaboratively discovered misdirection",
+      "risk": "Clue grammar and indicator scope need human review"
+    }
+  ]
+}

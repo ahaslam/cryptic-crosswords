@@ -1,0 +1,191 @@
+name: Verify Exet Lufz import
+on:
+  pull_request:
+    paths:
+      - 'scripts/export_exet_lufz.js'
+      - 'scripts/crossword_lexicon.py'
+      - 'scripts/benchmark_fill.py'
+      - 'scripts/test_export_exet_lufz.js'
+      - '.github/workflows/verify-lufz.yml'
+  workflow_dispatch:
+
+jobs:
+  verify-lufz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch upstream Lufz lexicon (do not commit data)
+        run: |
+          curl --fail --location --retry 3 --silent --show-error \
+            https://raw.githubusercontent.com/viresh-ratnakar/exet/master/lufz-en-lexicon.js \
+            --output /tmp/lufz-en-lexicon.js
+          test "$(wc -c </tmp/lufz-en-lexicon.js)" -gt 1000000
+      - name: Export scored words
+        run: |
+          node scripts/export_exet_lufz.js /tmp/lufz-en-lexicon.js /tmp/lufz.tsv
+      - name: Validate import and British spelling coverage
+        run: |
+          PYTHONPATH=scripts python - <<'PY'
+          from crossword_lexicon import load_scored_tsv, export_solver_dictionary
+          scores=load_scored_tsv('/tmp/lufz.tsv')
+          assert len(scores)>100000, f'Only {len(scores)} distinct entries'
+          assert 'COLOUR' in scores, 'Missing British spelling COLOUR'
+          assert 'HONOUR' in scores, 'Missing British spelling HONOUR'
+          count=export_solver_dictionary(scores,'/tmp/lufz-words.txt',minimum_score=80)
+          assert count>10000, f'Only {count} entries at score >= 80'
+          print(f'Imported {len(scores)} unique answers, {count} at >=80')
+          print(f'COLOUR score: {scores["COLOUR"]}')
+          print(f'HONOUR score: {scores["HONOUR"]}')
+          PY
+      - name: Install baseline dependencies
+        run: python -m pip install cmudict wordfreq
+      - name: Matched seed benchmark - Lufz
+        run: |
+          python scripts/benchmark_fill.py --scored-dictionary /tmp/lufz.tsv \
+            --min-frequency 80 --exception-floor 50 \
+            --seed 0 --grid-trials 2 --grid-candidates 4 --max-nodes 2000 \
+            --report /tmp/lufz-benchmark.json
+      - name: Matched seed benchmark - CMUdict
+        run: |
+          python scripts/benchmark_fill.py --seed 0 --grid-trials 2 \
+            --grid-candidates 4 --max-nodes 2000 \
+            --report /tmp/cmudict-benchmark.json
+      - name: Summarise matched comparison
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          reports={name:json.loads(Path('/tmp/'+name+'-benchmark.json').read_text())
+                   for name in ('lufz','cmudict')}
+          with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('## Matched grid seed, 2,000-node exploratory benchmark\n\n')
+              out.write('| Dictionary | Result | Vocabulary size | Seconds |\n|---|---|---:|---:|\n')
+              for name,r in reports.items():
+                  out.write(f"| {name} | {r['status']} | {r['dictionary_words']} | {r['elapsed_seconds']} |\n")
+              out.write('\nDifferent scoring scales; quality scores are **not directly comparable**.\n')
+          PY
+      - name: Prepare high-frequency Lufz subset for CSP
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          rows=Path('/tmp/lufz.tsv').read_text().splitlines()
+          selected=[r for r in rows if r and float(r.rsplit('\t',1)[1])>=80]
+          Path('/tmp/lufz-top.tsv').write_text('\n'.join(selected)+'\n')
+          print('CSP Lufz candidate entries:',len(selected))
+          PY
+      - name: CSP solver exploratory benchmark on Lufz
+        run: |
+          python scripts/benchmark_fill.py --solver csp \
+            --scored-dictionary /tmp/lufz-top.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 1 --grid-candidates 4 --max-nodes 500 \
+            --report /tmp/lufz-csp-benchmark.json
+      - name: Matched CSP versus backtracking on identical vocabulary and grid
+        run: |
+          python scripts/benchmark_fill.py --solver backtracking \
+            --scored-dictionary /tmp/lufz-top.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 1 --grid-candidates 4 --max-nodes 3000 \
+            --report /tmp/lufz-top-backtracking.json
+          python scripts/benchmark_fill.py --solver csp \
+            --scored-dictionary /tmp/lufz-top.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 1 --grid-candidates 4 --max-nodes 3000 \
+            --report /tmp/lufz-top-csp.json
+      - name: Longer search across four British grid layouts
+        run: |
+          python scripts/benchmark_fill.py --solver backtracking \
+            --scored-dictionary /tmp/lufz-top.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 4 --grid-candidates 8 --max-nodes 16000 \
+            --report /tmp/lufz-longer-search.json
+      - name: Summarise longer search
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path('/tmp/lufz-longer-search.json').read_text())
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('\n## Longer search: 16,000 nodes across four grid patterns\n\n')
+              out.write(f"Overall: **{r['status']}** in {r['elapsed_seconds']} seconds.\n\n")
+              out.write('| Grid seed | Entries | Result | Fill seconds |\n|---:|---:|---|---:|\n')
+              for t in r['trials']:
+                  out.write(f"| {t['seed']} | {t.get('entries','—')} | {t['status']} | {t.get('fill_seconds',t.get('feasibility_seconds','—'))} |\n")
+          PY
+      - name: Reject unsuitable answers and retry CSP
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+          sys.path.insert(0,'scripts')
+          from crossword_lexicon import normalize_answer
+          rejected={'LIETO','HADTO','THEREST','INNEED','THEEND','AHOM','SNELL','KEAN','AHERN','HDMI','EST','HASTA','BAUM','ROSEANNE','MURIEL','CASTRO','AMOS','ALI','ESSEN','TRONDHEIM','MISSOURI','CARTER','ADAMS','AMIGA','SPITHEAD','NORTHSEA','FOLLOWUP','ISHTAR','GLEECLUB','GRIMALDI','NON','ARG','MANTEGNA','NEK','MBA','EIFEL'}
+          rows=Path('/tmp/lufz-top.tsv').read_text().splitlines()
+          kept=[row for row in rows if normalize_answer(row.split('\t',1)[0]) not in rejected]
+          Path('/tmp/lufz-reviewed.tsv').write_text('\n'.join(kept)+'\n')
+          print('Excluded',len(rows)-len(kept),'editorially problematic answers')
+          assert not any(normalize_answer(row.split('\t',1)[0]) in rejected for row in kept)
+          assert len(rows)-len(kept)>0, 'Editorial exclusions matched no dictionary entries'
+          PY
+          python scripts/benchmark_fill.py --solver csp \
+            --scored-dictionary /tmp/lufz-reviewed.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 4 --grid-candidates 8 --max-nodes 16000 \
+            --report /tmp/lufz-reviewed-csp.json
+      - name: Archive editorial candidate draft
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lufz-reviewed-csp-draft
+          path: /tmp/lufz-reviewed-csp.json
+          if-no-files-found: warn
+      - name: Report quality-filtered CSP answers
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('/tmp/lufz-reviewed-csp.json').read_text())
+          print('QUALITY FILTERED STATUS:',r['status'])
+          print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))
+          if r['status']=='filled_unreviewed':
+              import sys
+              sys.path.insert(0,'scripts')
+              from crossword_lexicon import normalize_answer
+              allowed={normalize_answer(line.split('\t',1)[0]) for line in Path('/tmp/lufz-reviewed.tsv').read_text().splitlines()}
+              answers={clue['answer'] for group in r['draft']['clues'].values() for clue in group}
+              excluded=answers-allowed
+              assert not excluded, f'Fill used words outside editorial dictionary: {sorted(excluded)}'
+          PY
+      - name: Show CSP draft answers
+        run: |
+          python -c "import json; r=json.load(open('/tmp/lufz-top-csp.json')); print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))"
+      - name: Publish controlled solver comparison
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('\n## Controlled solver comparison: same grid and 57k-word Lufz subset\n\n')
+              out.write('| Solver | Fill | Nodes used | Runtime (s) |\n|---|---|---:|---:|\n')
+              for name in ('backtracking','csp'):
+                  r=json.loads(Path('/tmp/lufz-top-'+name+'.json').read_text())
+                  t=r['trials'][0]
+                  nodes=t.get('feasibility_nodes',t.get('node_budget'))
+                  out.write(f"| {name} | {r['status']} | {nodes} | {r['elapsed_seconds']} |\n")
+              out.write('\nNode count on failures is the allocated cap, not a measured count.\n')
+          PY
+      - name: CSP comparison summary
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path('/tmp/lufz-csp-benchmark.json').read_text())
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('\n## CSP pilot (top-ranked Lufz words)\n\n')
+              out.write(f"Status: **{r['status']}**, elapsed {r['elapsed_seconds']} seconds; ")
+              out.write(f"dictionary {r['dictionary_words']} words, budget 500 nodes.\n")
+          PY

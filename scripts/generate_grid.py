@@ -28,7 +28,7 @@ def slots(grid):
                     found.append(cells)
     return found
 
-def valid(grid, min_clues=50, max_clues=55):
+def valid(grid, min_clues=26, max_clues=30):
     found = slots(grid)
     if not min_clues <= len(found) <= max_clues:
         return False
@@ -46,24 +46,74 @@ def valid(grid, min_clues=50, max_clues=55):
                 queue.append(neighbor)
     return seen == white
 
-def generate(seed=0, attempts=20000, min_clues=50, max_clues=55):
-    if not 1 <= min_clues <= max_clues <= 55:
-        raise ValueError('Clue count must be between 1 and 55')
+def _lattice(top_unchecked, left_unchecked):
+    """Exet-style chequered starting pattern; four parity variants."""
+    return [['#' if ((r + int(top_unchecked)) % 2 == 1 and
+                     (c + int(left_unchecked)) % 2 == 1) else '.'
+             for c in range(N)] for r in range(N)]
+
+
+def _british_checking(grid):
+    """No consecutive unchecked letters, and at least half checked per entry."""
+    entries = slots(grid)
+    counts = {}
+    for entry in entries:
+        for cell in entry:
+            counts[cell] = counts.get(cell, 0) + 1
+    for entry in entries:
+        unchecked = [counts.get(cell, 0) == 1 for cell in entry]
+        if any(a and b for a, b in zip(unchecked, unchecked[1:])):
+            return False
+        if sum(unchecked) > (len(entry) + (len(entry) >= 9)) // 2:
+            return False
+    return True
+
+
+def _structural(grid):
+    """Validate connectivity and slots independently of the target clue count."""
+    return valid(grid, min_clues=1, max_clues=60) and _british_checking(grid)
+
+
+def generate(seed=0, attempts=20000, min_clues=26, max_clues=30):
+    if not 1 <= min_clues <= max_clues <= 60:
+        raise ValueError('Clue count must be between 1 and 60')
     rng = random.Random(seed)
     pairs = [(r, c) for r in range(N) for c in range(N)
              if (r, c) <= (N-1-r, N-1-c)]
-    for _ in range(attempts):
-        grid = [['.'] * N for _ in range(N)]
-        rng.shuffle(pairs)
-        for r, c in pairs:
-            if rng.random() < 0.37:
-                rr, cc = N-1-r, N-1-c
-                grid[r][c] = grid[rr][cc] = '#'
-                if any(len(s) < 3 for s in slots(grid)):
-                    grid[r][c] = grid[rr][cc] = '.'
-        if valid(grid, min_clues=min_clues, max_clues=max_clues):
-            return [''.join(row) for row in grid]
-    raise RuntimeError('No valid grid found: try a different seed or more attempts')
+    best = None
+    # Limit preferred-count exploration so low-count fallbacks remain fast.
+    for trial in range(min(max(1, attempts), 24)):
+        variant = (seed + trial) % 4
+        grid = _lattice(bool(variant & 1), bool(variant & 2))
+        if not _structural(grid):
+            continue
+        order = pairs[:]
+        rng.shuffle(order)
+        # Add blocks to a valid chequered lattice rather than removing blocks
+        # from an initially open grid. Every change preserves rotational symmetry.
+        for r, c in order:
+            if min_clues <= len(slots(grid)) <= max_clues:
+                result = [''.join(row) for row in grid]
+                if len(slots(grid)) >= 28:
+                    return result
+                if best is None:
+                    best = result
+                break
+            rr, cc = N-1-r, N-1-c
+            if grid[r][c] == '#' or grid[rr][cc] == '#':
+                continue
+            grid[r][c] = grid[rr][cc] = '#'
+            if not _structural(grid) or len(slots(grid)) > max_clues:
+                grid[r][c] = grid[rr][cc] = '.'
+        if min_clues <= len(slots(grid)) <= max_clues:
+            result = [''.join(row) for row in grid]
+            if len(slots(grid)) >= 28:
+                return result
+            if best is None:
+                best = result
+    if best is not None:
+        return best
+    raise RuntimeError('No valid lattice grid found: try a different seed or more attempts')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
