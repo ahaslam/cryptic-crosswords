@@ -116,6 +116,24 @@ jobs:
               for t in r['trials']:
                   out.write(f"| {t['seed']} | {t.get('entries','—')} | {t['status']} | {t.get('fill_seconds',t.get('feasibility_seconds','—'))} |\n")
           PY
+      - name: Reject unsuitable answers and retry CSP
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          rejected={'LIETO','HADTO','THEREST','INNEED','THEEND','AHOM','SNELL','KEAN','AHERN','HDMI','EST','HASTA','BAUM','ROSEANNE','MURIEL','CASTRO','AMOS','ALI','ESSEN','TRONDHEIM','MISSOURI','CARTER','ADAMS','AMIGA','SPITHEAD','NORTHSEA','FOLLOWUP'}
+          rows=Path('/tmp/lufz-top.tsv').read_text().splitlines()
+          kept=[row for row in rows if row.split('\t',1)[0] not in rejected]
+          Path('/tmp/lufz-reviewed.tsv').write_text('\n'.join(kept)+'\n')
+          print('Excluded',len(rows)-len(kept),'editorially problematic answers')
+          PY
+          python scripts/benchmark_fill.py --solver csp \
+            --scored-dictionary /tmp/lufz-reviewed.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 4 --grid-candidates 8 --max-nodes 16000 \
+            --report /tmp/lufz-reviewed-csp.json
+      - name: Report quality-filtered CSP answers
+        run: |
+          python -c "import json; r=json.load(open('/tmp/lufz-reviewed-csp.json')); print('QUALITY FILTERED STATUS:',r['status']); print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))"
       - name: Show CSP draft answers
         run: |
           python -c "import json; r=json.load(open('/tmp/lufz-top-csp.json')); print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))"
