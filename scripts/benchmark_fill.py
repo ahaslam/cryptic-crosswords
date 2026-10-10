@@ -87,6 +87,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 improved,quality_nodes=fill(
                     pattern,dictionary,seed=trial_seed,max_nodes=budget,
                     word_scores=scores,min_score=exception_floor,
+                    preferred_score=min_frequency,max_exceptions=max_exceptions,
                     solver=solver)
                 quality_status='filled_unreviewed'
             except RuntimeError:
@@ -104,12 +105,16 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                         'minimum_frequency':min(scores[w] for w in answers)}
             baseline_quality=assess(baseline)
             improved_quality=assess(improved) if improved else None
+            # The quality phase enforces the exception cap inside the solver.
+            # Keep the unconstrained baseline for diagnostics if no compliant fill exists.
             # Fewer uncommon answers wins; then higher mean frequency.
             selected='baseline'
             draft=baseline
             if improved is not None and (
-                improved_quality['exception_count'],-improved_quality['mean_frequency']
-            ) < (baseline_quality['exception_count'],-baseline_quality['mean_frequency']):
+                baseline_quality['exception_count']>max_exceptions or
+                (improved_quality['exception_count'],-improved_quality['mean_frequency'])
+                < (baseline_quality['exception_count'],-baseline_quality['mean_frequency'])
+            ):
                 selected='improved'
                 draft=improved
             selected_quality=assess(draft)
