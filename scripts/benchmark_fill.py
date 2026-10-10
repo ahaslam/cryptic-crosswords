@@ -122,6 +122,23 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 quality_status='filled_unreviewed'
             except RuntimeError:
                 improved=None
+            # Explore a stronger diversity preference on the same layout.
+            # Keep the original quality fill as fallback if this search fails.
+            alternate=None
+            alternate_nodes=None
+            try:
+                alternate,alternate_nodes=fill(
+                    pattern,dictionary,seed=trial_seed,max_nodes=budget,
+                    word_scores=scores,min_score=exception_floor,
+                    preferred_score=min_frequency,max_exceptions=max_exceptions,
+                    solver=solver,ranking_scores=suitability_scores,
+                    editorial_order=4)
+                if improved is None or score_draft(alternate)['score']>score_draft(improved)['score']:
+                    improved=alternate
+                    quality_nodes=alternate_nodes
+                    quality_status='filled_unreviewed'
+            except RuntimeError:
+                pass
             quality_seconds=round(time.monotonic()-quality_started,2)
 
             def assess(draft):
@@ -170,6 +187,8 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                            'feasibility_seconds':feasibility_seconds,
                            'quality_status':quality_status,'quality_nodes':quality_nodes,
                            'quality_seconds':quality_seconds,
+                           'alternate_nodes':alternate_nodes,
+                           'alternate_editorial':score_draft(alternate) if alternate else None,
                            'baseline_quality':baseline_quality,
                            'improved_quality':improved_quality,
                            'selected':selected,
