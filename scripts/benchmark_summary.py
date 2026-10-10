@@ -38,10 +38,10 @@ def summary(path):
                 if improved is not None:
                     lines.append(f"| Frequency-constrained | {improved['exception_count']} | {improved['mean_frequency']} |")
                     delta=baseline['exception_count']-improved['exception_count']
-                    lines.append(f"\\n**Same-grid improvement:** {delta:+d} fewer uncommon answers with the constrained fill.")
+                    lines.append(f"\n**Same-grid improvement:** {delta:+d} fewer uncommon answers with the constrained fill.")
                 else:
                     lines.append("| Frequency-constrained | No complete fill | — |")
-                    lines.append("\\n**Same-grid improvement:** Not measurable: constrained fill did not complete.")
+                    lines.append("\n**Same-grid improvement:** Not measurable: constrained fill did not complete.")
             exceptions=t.get('exceptions',[])
             if exceptions:
                 lines.append("\n**Answers requiring review:** "+", ".join(
