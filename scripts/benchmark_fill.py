@@ -99,7 +99,9 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                            'quality_seconds':quality_seconds,
                            'baseline_quality':baseline_quality,
                            'improved_quality':improved_quality,
-                           'selected':selected,**selected_quality})
+                           'selected':selected,
+                           'quality_target_met':selected_quality['exception_count']<=max_exceptions,
+                           **selected_quality})
             return {'status':'filled_unreviewed','seed':seed,'dictionary_words':len(words),
                     'eligible_words':eligible,'allowed_words':allowed,
                     'min_frequency':min_frequency,'exception_floor':exception_floor,
