@@ -114,6 +114,8 @@ jobs:
                       print('EDITORIAL TRIAL',level,
                             'seed',trial.get('selected_grid_seed'),
                             'selected',trial.get('selected'),
+                            'baseline_quality',trial.get('baseline_quality'),
+                            'improved_quality',trial.get('improved_quality'),
                             'baseline',trial.get('baseline_editorial'),
                             'improved',trial.get('improved_editorial'))
           for direction in ('across','down'):
