@@ -101,7 +101,7 @@ def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=N
             # Most familiar candidates first; ties stable for reproducible results.
             possible.sort(key=lambda w:(
                 -(ranking_scores if ranking_scores is not None else word_scores).get(w,0)
-                +(candidate_penalty(w,used) if editorial_order else 0),w))
+                +(candidate_penalty(w,used) * (editorial_order if isinstance(editorial_order,(int,float)) else 1) if editorial_order else 0),w))
         for word in possible:
             exception=(max_exceptions is not None and word_scores.get(word,0)<preferred_score)
             if exception and exceptions_used>=max_exceptions:continue
