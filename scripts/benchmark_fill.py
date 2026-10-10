@@ -58,6 +58,19 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             except RuntimeError as exc:
                 trials.append({'seed':trial_seed,'status':'grid_failed','reason':str(exc)})
                 continue
+            # Paired comparison: both rankings evaluate the identical candidate pool.
+            # No additional solver budget is spent on the alternate ranking.
+            paired=None
+            if grid_strategy in ('ranked','vocabulary'):
+                geometric,geometric_seed,geometric_metrics=select(
+                    trial_seed,grid_candidates,grid_attempts)
+                lexical,lexical_seed,lexical_metrics=select_vocabulary(
+                    trial_seed,common_counts,grid_candidates,grid_attempts)
+                paired={'geometric_seed':geometric_seed,
+                        'vocabulary_seed':lexical_seed,
+                        'same_grid':geometric_seed==lexical_seed,
+                        'geometric_metrics':geometric_metrics,
+                        'vocabulary_metrics':lexical_metrics}
             entry_count=len(slots(pattern))
             if not 50<=entry_count<=55:
                 raise AssertionError('Generated grid violates 50–55 entry contract')
@@ -91,7 +104,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 else:
                     trials.append({'seed':trial_seed,'status':'unfilled','entries':entry_count,
                                'node_budget':budget,'selected_grid_seed':selected_seed,
-                               'grid_metrics':grid_metrics,'reason':str(exc),
+                               'grid_metrics':grid_metrics,'paired_selection':paired,'reason':str(exc),
                                'fill_seconds':round(time.monotonic()-started,2),
                                'quality_status':quality_status,
                                'quality_seconds':quality_seconds})
@@ -119,7 +132,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             selected_quality=assess(draft)
             trials.append({'seed':trial_seed,'status':'filled_unreviewed',
                            'entries':entry_count,'selected_grid_seed':selected_seed,
-                           'grid_metrics':grid_metrics,'feasibility_nodes':feasibility_nodes,
+                           'grid_metrics':grid_metrics,'paired_selection':paired,'feasibility_nodes':feasibility_nodes,
                            'feasibility_seconds':feasibility_seconds,
                            'quality_status':quality_status,'quality_nodes':quality_nodes,
                            'quality_seconds':quality_seconds,
