@@ -130,7 +130,9 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     'max_exceptions':max_exceptions,'grid_trials':grid_trials,'grid_strategy':grid_strategy,
                     'grid_candidates':grid_candidates,'solver':solver,
                     'max_nodes_total':max_nodes,'elapsed_seconds':round(time.monotonic()-start,2),
-                    'trials':trials,'draft':draft}
+                    'trials':trials,'draft':draft,
+                    'selected_quality':selected_quality,
+                    'quality_target_met':selected_quality['exception_count']<=max_exceptions}
     return {'status':'unfilled','seed':seed,'dictionary_words':len(words),
             'eligible_words':eligible,'allowed_words':allowed,
             'min_frequency':min_frequency,'exception_floor':exception_floor,
