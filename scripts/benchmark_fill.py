@@ -14,6 +14,7 @@ from generate_grid import generate, slots
 from rank_grids import select, metrics, candidates
 from vocabulary_grid_rank import select_vocabulary_aware
 from answer_suitability import assess as assess_suitability
+from editorial_signals import review_signal, review_draft
 
 DIFFICULTY_PRESETS = {
     'accessible': {'cmu_min': 3.5, 'cmu_floor': 2.5, 'lufz_min': 85.0, 'lufz_floor': 60.0, 'max_exceptions': 2},
@@ -53,6 +54,11 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
     score_scale=100.0 if scored_dictionary else 7.0
     suitability_scores={w:assess_suitability(w,max(0,min(1,v/score_scale)),difficulty).score
                         for w,v in scores.items()}
+    # Review flags affect ordering, never dictionary validity or cultural origin.
+    # Keep the frequency-derived exception budget independent of these signals.
+    for word in suitability_scores:
+        if review_signal(word).review_required:
+            suitability_scores[word]-=30
     eligible=sum(v>=min_frequency for v in scores.values())
     allowed=sum(v>=exception_floor for v in scores.values())
     start=time.monotonic()
@@ -140,7 +146,8 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 selected='improved'
                 draft=improved
             draft['difficulty']=difficulty
-            draft['ranking_policy']='graded_suitability_v1'
+            draft['ranking_policy']='graded_suitability_editorial_v2'
+            draft['editorial_review']=review_draft(draft)
             selected_quality=assess(draft)
             trials.append({'seed':trial_seed,'status':'filled_unreviewed',
                            'entries':entry_count,'selected_grid_seed':selected_seed,
