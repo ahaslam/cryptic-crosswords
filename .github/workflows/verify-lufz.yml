@@ -84,6 +84,33 @@ jobs:
             --min-frequency 80 --exception-floor 80 \
             --seed 0 --grid-trials 1 --grid-candidates 4 --max-nodes 500 \
             --report /tmp/lufz-csp-benchmark.json
+      - name: Matched CSP versus backtracking on identical vocabulary and grid
+        run: |
+          python scripts/benchmark_fill.py --solver backtracking \
+            --scored-dictionary /tmp/lufz-top.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 1 --grid-candidates 4 --max-nodes 3000 \
+            --report /tmp/lufz-top-backtracking.json
+          python scripts/benchmark_fill.py --solver csp \
+            --scored-dictionary /tmp/lufz-top.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 1 --grid-candidates 4 --max-nodes 3000 \
+            --report /tmp/lufz-top-csp.json
+      - name: Publish controlled solver comparison
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('\n## Controlled solver comparison: same grid and 57k-word Lufz subset\n\n')
+              out.write('| Solver | Fill | Nodes used | Runtime (s) |\n|---|---|---:|---:|\n')
+              for name in ('backtracking','csp'):
+                  r=json.loads(Path('/tmp/lufz-top-'+name+'.json').read_text())
+                  t=r['trials'][0]
+                  nodes=t.get('feasibility_nodes',t.get('node_budget'))
+                  out.write(f"| {name} | {r['status']} | {nodes} | {r['elapsed_seconds']} |\n")
+              out.write('\nNode count on failures is the allocated cap, not a measured count.\n')
+          PY
       - name: CSP comparison summary
         run: |
           python - <<'PY'
