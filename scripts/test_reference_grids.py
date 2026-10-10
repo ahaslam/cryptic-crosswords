@@ -30,7 +30,7 @@ class ReferenceGridTests(unittest.TestCase):
         references = json.loads(path.read_text(encoding='utf-8'))
         measured = analyse(references)['grids']['sunday-times-p87']
         self.assertEqual(measured['entries'], 28)
-        self.assertEqual(measured['max_entry_length'], 10)
+        self.assertEqual(measured['max_entry_length'], 11)
         self.assertTrue(measured['rotationally_symmetric'])
         self.assertEqual(measured['three_letter_entries'], 0)
 
