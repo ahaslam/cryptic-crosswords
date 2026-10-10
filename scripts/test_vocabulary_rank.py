@@ -7,7 +7,7 @@ class VocabularyRankingTests(unittest.TestCase):
         options=candidates(0,3,20000)
         counts={n:1000 for n in range(3,16)}
         pattern,seed,score=select_vocabulary(0,counts,3,20000)
-        self.assertIn((seed,pattern),[(s,g) for _,s,g in options])
+        self.assertIn((seed,pattern),[(candidate_seed,grid) for _,candidate_seed,grid in options])
         self.assertIn('vocabulary_scarcity',score)
         self.assertEqual((pattern,seed,score),select_vocabulary(0,counts,3,20000))
 
