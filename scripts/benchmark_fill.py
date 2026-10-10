@@ -15,7 +15,7 @@ from rank_grids import select, metrics, candidates
 from vocabulary_grid_rank import select_vocabulary_aware
 from answer_suitability import assess as assess_suitability
 from editorial_signals import review_signal, review_draft
-from grid_editorial_quality import score_draft
+from grid_editorial_quality import score_draft, ABSTRACT_ADMIN
 
 DIFFICULTY_PRESETS = {
     'accessible': {'cmu_min': 3.5, 'cmu_floor': 2.5, 'lufz_min': 85.0, 'lufz_floor': 60.0, 'max_exceptions': 2},
@@ -149,8 +149,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 long_answers=sorted(
                     {c['answer'] for group in incumbent['clues'].values()
                      for c in group if len(c['answer'])>=10},
-                    key=lambda w:(w not in ('MANIFESTATIONS','CHARACTERISTICS',
-                                            'ESTABLISHMENTS','AFOREMENTIONED'),
+                    key=lambda w:(w not in ABSTRACT_ADMIN,
                                   -len(w),w))
                 for target in long_answers[:4]:
                     variant_scores=suitability_scores.copy()
