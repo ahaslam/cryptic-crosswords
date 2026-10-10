@@ -68,3 +68,30 @@ jobs:
                   out.write(f"| {name} | {r['status']} | {r['dictionary_words']} | {r['elapsed_seconds']} |\n")
               out.write('\nDifferent scoring scales; quality scores are **not directly comparable**.\n')
           PY
+      - name: Prepare high-frequency Lufz subset for CSP
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          rows=Path('/tmp/lufz.tsv').read_text().splitlines()
+          selected=[r for r in rows if r and float(r.rsplit('\t',1)[1])>=80]
+          Path('/tmp/lufz-top.tsv').write_text('\n'.join(selected)+'\n')
+          print('CSP Lufz candidate entries:',len(selected))
+          PY
+      - name: CSP solver exploratory benchmark on Lufz
+        run: |
+          python scripts/benchmark_fill.py --solver csp \
+            --scored-dictionary /tmp/lufz-top.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 1 --grid-candidates 4 --max-nodes 500 \
+            --report /tmp/lufz-csp-benchmark.json
+      - name: CSP comparison summary
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path('/tmp/lufz-csp-benchmark.json').read_text())
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('\n## CSP pilot (top-ranked Lufz words)\n\n')
+              out.write(f"Status: **{r['status']}**, elapsed {r['elapsed_seconds']} seconds; ")
+              out.write(f"dictionary {r['dictionary_words']} words, budget 500 nodes.\n")
+          PY
