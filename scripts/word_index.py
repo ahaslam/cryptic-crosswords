@@ -24,4 +24,4 @@ class WordIndex:
             pool = constraints[0].intersection(*constraints[1:])
         else:
             pool = self.words.get(length, ())
-        return [word for word in pool if word not in used]
+        return sorted(word for word in pool if word not in used)
