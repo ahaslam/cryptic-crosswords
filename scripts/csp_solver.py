@@ -7,7 +7,7 @@ branch choice, not an individual arc revision.
 from collections import defaultdict, deque
 
 def solve_csp(slots, words_by_length, scores=None, preferred_score=None,
-              max_exceptions=None, max_nodes=10000):
+              max_exceptions=None, max_nodes=10000, ranking_scores=None):
     domains=[set(words_by_length[len(slot[4])]) for slot in slots]
     crossing=defaultdict(list)
     for i,slot in enumerate(slots):
