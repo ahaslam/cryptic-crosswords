@@ -176,23 +176,18 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                            'improved_editorial':score_draft(improved) if improved else None,
                            'quality_target_met':selected_quality['exception_count']<=max_exceptions,
                            **selected_quality})
-            if selected_quality['exception_count']>max_exceptions:
-                # Keep searching other layouts rather than stopping at the
-                # first technically complete but unsuitable draft.
-                candidate=(selected_quality['exception_count'],
-                           -selected_quality['mean_frequency'])
-                if best_fallback is None or candidate<best_fallback[0]:
-                    best_fallback=(candidate,draft,selected_quality)
-                continue
-            return {'status':'filled_unreviewed','difficulty':difficulty,'seed':seed,'dictionary_source':'lufz' if scored_dictionary else 'cmudict', 'dictionary_words':len(words),
-                    'eligible_words':eligible,'allowed_words':allowed,
-                    'min_frequency':min_frequency,'exception_floor':exception_floor,
-                    'max_exceptions':max_exceptions,'grid_trials':grid_trials,'grid_strategy':grid_strategy,
-                    'grid_candidates':grid_candidates,'solver':solver,
-                    'max_nodes_total':max_nodes,'elapsed_seconds':round(time.monotonic()-start,2),
-                    'trials':trials,'draft':draft,
-                    'selected_quality':selected_quality,
-                    'quality_target_met':selected_quality['exception_count']<=max_exceptions}
+            # Compare complete fills across layouts as well as within one layout.
+            # A compliant but editorially weak first fill must not terminate
+            # the search before alternative layouts have been considered.
+            compliant=selected_quality['exception_count']<=max_exceptions
+            editorial=score_draft(draft)['score']
+            candidate=(0 if compliant else 1,
+                       -editorial if compliant else selected_quality['exception_count'],
+                       selected_quality['exception_count'] if compliant else -editorial,
+                       -selected_quality['mean_frequency'])
+            if best_fallback is None or candidate<best_fallback[0]:
+                best_fallback=(candidate,draft,selected_quality)
+            continue
     if best_fallback is not None:
         _,draft,quality=best_fallback
         return {'status':'filled_unreviewed','difficulty':difficulty,
@@ -204,7 +199,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 'grid_candidates':grid_candidates,'solver':solver,
                 'max_nodes_total':max_nodes,'elapsed_seconds':round(time.monotonic()-start,2),
                 'trials':trials,'draft':draft,'selected_quality':quality,
-                'quality_target_met':False}
+                'quality_target_met':quality['exception_count']<=max_exceptions}
     return {'status':'unfilled','difficulty':difficulty,'seed':seed,'dictionary_words':len(words),
             'eligible_words':eligible,'allowed_words':allowed,
             'min_frequency':min_frequency,'exception_floor':exception_floor,
