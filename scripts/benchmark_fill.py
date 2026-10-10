@@ -15,21 +15,26 @@ from rank_grids import select, metrics
 
 def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
         grid_trials=4, max_exceptions=5, exception_floor=2.0,
-        grid_candidates=8, grid_strategy='ranked'):
+        grid_candidates=8, grid_strategy='ranked', scored_dictionary=None):
     if grid_candidates<1 or grid_strategy not in ('ranked','random'):
         raise ValueError('Invalid grid selection settings')
     if grid_trials<1 or max_nodes<grid_trials:
         raise ValueError('max_nodes must be >= grid_trials >= 1')
     if not 0<=max_exceptions<=55 or exception_floor>min_frequency:
         raise ValueError('Invalid exception settings')
-    try:
-        import cmudict
-        from wordfreq import zipf_frequency
-    except ImportError as exc:
-        raise SystemExit('Install: python -m pip install cmudict wordfreq') from exc
-    words=sorted({w.upper() for w in cmudict.words()
-                  if w.isascii() and w.isalpha() and 3<=len(w)<=15})
-    scores={w:zipf_frequency(w,'en') for w in words}
+    if scored_dictionary is not None:
+        from crossword_lexicon import load_scored_tsv
+        scores=load_scored_tsv(scored_dictionary)
+        words=sorted(scores)
+    else:
+        try:
+            import cmudict
+            from wordfreq import zipf_frequency
+        except ImportError as exc:
+            raise SystemExit('Install: python -m pip install cmudict wordfreq') from exc
+        words=sorted({w.upper() for w in cmudict.words()
+                      if w.isascii() and w.isalpha() and 3<=len(w)<=15})
+        scores={w:zipf_frequency(w,'en') for w in words}
     eligible=sum(v>=min_frequency for v in scores.values())
     allowed=sum(v>=exception_floor for v in scores.values())
     start=time.monotonic()
@@ -114,7 +119,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                            'selected':selected,
                            'quality_target_met':selected_quality['exception_count']<=max_exceptions,
                            **selected_quality})
-            return {'status':'filled_unreviewed','seed':seed,'dictionary_words':len(words),
+            return {'status':'filled_unreviewed','seed':seed,'dictionary_source':'lufz' if scored_dictionary else 'cmudict', 'dictionary_words':len(words),
                     'eligible_words':eligible,'allowed_words':allowed,
                     'min_frequency':min_frequency,'exception_floor':exception_floor,
                     'max_exceptions':max_exceptions,'grid_trials':grid_trials,'grid_strategy':grid_strategy,
@@ -140,11 +145,12 @@ def main():
     parser.add_argument('--max-exceptions',type=int,default=5)
     parser.add_argument('--exception-floor',type=float,default=2.0)
     parser.add_argument('--min-frequency',type=float,default=3.0)
+    parser.add_argument('--scored-dictionary',help='Scored TSV export; uses 0..100 popularity scale')
     parser.add_argument('--report',default='fill-benchmark.json')
     args=parser.parse_args()
     report=run(args.seed,args.max_nodes,args.grid_attempts,args.min_frequency,
                args.grid_trials,args.max_exceptions,args.exception_floor,
-               args.grid_candidates,args.grid_strategy)
+               args.grid_candidates,args.grid_strategy,args.scored_dictionary)
     target=Path(args.report).resolve()
     published=(Path(__file__).resolve().parents[1]/'site'/'puzzles').resolve()
     if target==published or published in target.parents:
