@@ -1,5 +1,5 @@
 import unittest
-from grid_editorial_quality import score_draft
+from grid_editorial_quality import score_draft, candidate_penalty
 
 def draft(words):
     return {'clues':{'across':[{'answer':w} for w in words],'down':[]}}
@@ -13,6 +13,12 @@ class GridEditorialQualityTests(unittest.TestCase):
 
     def test_no_nationality_or_name_penalty(self):
         self.assertEqual(score_draft(draft(['NBC','ASHANTI','MANTEGNA']))['score'],100)
+
+    def test_search_penalty_grows_with_repetitive_answers(self):
+        self.assertEqual(candidate_penalty('MANIFESTATIONS', []),0)
+        self.assertEqual(candidate_penalty('CHARACTERISTICS',['MANIFESTATIONS']),0)
+        self.assertGreater(candidate_penalty('ESTABLISHMENTS',['MANIFESTATIONS','CHARACTERISTICS']),0)
+        self.assertEqual(candidate_penalty('NBC',['MANIFESTATIONS','CHARACTERISTICS']),0)
 
     def test_contextual_review_is_visible(self):
         result=score_draft(draft(['NEGRO','NBC']))
