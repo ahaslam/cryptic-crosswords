@@ -11,7 +11,8 @@ from pathlib import Path
 
 from fill_grid import fill
 from generate_grid import generate, slots
-from rank_grids import select, metrics
+from rank_grids import select, metrics, candidates
+from vocabulary_grid_rank import select_vocabulary_aware
 from answer_suitability import assess as assess_suitability
 
 DIFFICULTY_PRESETS = {
@@ -67,8 +68,13 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             budget=base+(1 if trial<extra else 0)
             try:
                 if grid_strategy=='ranked':
-                    pattern,selected_seed,grid_metrics=select(
-                        trial_seed,grid_candidates,grid_attempts)
+                    if difficulty=='accessible':
+                        pattern,selected_seed,grid_metrics=select_vocabulary_aware(
+                            candidates(trial_seed,grid_candidates,grid_attempts),
+                            scores,min_frequency,max_exceptions)
+                    else:
+                        pattern,selected_seed,grid_metrics=select(
+                            trial_seed,grid_candidates,grid_attempts)
                 else:
                     pattern=generate(seed=trial_seed,attempts=grid_attempts)
                     selected_seed=trial_seed
