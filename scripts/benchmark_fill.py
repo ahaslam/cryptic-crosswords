@@ -117,7 +117,8 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     pattern,dictionary,seed=trial_seed,max_nodes=budget,
                     word_scores=scores,min_score=exception_floor,
                     preferred_score=min_frequency,max_exceptions=max_exceptions,
-                    solver=solver,ranking_scores=suitability_scores)
+                    solver=solver,ranking_scores=suitability_scores,
+                    editorial_order=True)
                 quality_status='filled_unreviewed'
             except RuntimeError:
                 improved=None
