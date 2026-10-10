@@ -28,7 +28,7 @@ def slots(grid):
                     found.append(cells)
     return found
 
-def valid(grid, min_clues=50, max_clues=55):
+def valid(grid, min_clues=26, max_clues=30):
     found = slots(grid)
     if not min_clues <= len(found) <= max_clues:
         return False
@@ -47,8 +47,8 @@ def valid(grid, min_clues=50, max_clues=55):
     return seen == white
 
 def generate(seed=0, attempts=20000, min_clues=50, max_clues=55):
-    if not 1 <= min_clues <= max_clues <= 55:
-        raise ValueError('Clue count must be between 1 and 55')
+    if not 1 <= min_clues <= max_clues <= 60:
+        raise ValueError('Clue count must be between 1 and 60')
     rng = random.Random(seed)
     pairs = [(r, c) for r in range(N) for c in range(N)
              if (r, c) <= (N-1-r, N-1-c)]
@@ -56,7 +56,7 @@ def generate(seed=0, attempts=20000, min_clues=50, max_clues=55):
         grid = [['.'] * N for _ in range(N)]
         rng.shuffle(pairs)
         for r, c in pairs:
-            if rng.random() < 0.37:
+            if rng.random() < 0.23:
                 rr, cc = N-1-r, N-1-c
                 grid[r][c] = grid[rr][cc] = '#'
                 if any(len(s) < 3 for s in slots(grid)):
