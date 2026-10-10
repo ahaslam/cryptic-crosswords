@@ -24,4 +24,22 @@ class FillTests(unittest.TestCase):
                     for i,ch in enumerate(clue['answer']):
                         self.assertEqual(puzzle['grid'][clue['row']+i*dr][clue['col']+i*dc],ch)
 
+    def test_quality_threshold_and_ranked_fill(self):
+        with tempfile.TemporaryDirectory() as d:
+            dictionary=Path(d)/'words.txt'
+            dictionary.write_text('ABC\nDEF\nGHI\nADG\nBEH\nCFI\nZZZ\n')
+            scores={w:4.0 for w in ('ABC','DEF','GHI','ADG','BEH','CFI')}
+            scores['ZZZ']=1.0
+            puzzle,_=fill(['...']*3,dictionary,seed=0,max_nodes=1000,
+                          word_scores=scores,min_score=3.0)
+            answers={c['answer'] for group in puzzle['clues'].values() for c in group}
+            self.assertEqual(answers,set(scores)-{'ZZZ'})
+
+    def test_threshold_rejects_missing_scores(self):
+        with tempfile.TemporaryDirectory() as d:
+            dictionary=Path(d)/'words.txt'
+            dictionary.write_text('ABC\n')
+            with self.assertRaises(ValueError):
+                fill(['...']*3,dictionary,min_score=3.0)
+
 if __name__=='__main__':unittest.main()
