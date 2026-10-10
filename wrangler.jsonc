@@ -1,0 +1,7 @@
+{
+  "name": "cryptic-crosswords",
+  "compatibility_date": "2026-10-10",
+  "assets": {
+    "directory": "./site"
+  }
+}
