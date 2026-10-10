@@ -7,6 +7,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 from word_index import WordIndex
+from csp_solver import solve_csp
 
 def slots_of(grid):
     n=len(grid); numbers={}; slots=[]
@@ -27,7 +28,7 @@ def slots_of(grid):
     return slots
 
 def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=None,
-         preferred_score=None,max_exceptions=None):
+         preferred_score=None,max_exceptions=None,solver='backtracking'):
     n=len(pattern)
     if n<3 or any(len(row)!=n or any(ch not in '#.' for ch in row) for row in pattern):
         raise ValueError('Expected square pattern of # and .')
@@ -46,6 +47,22 @@ def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=N
             raise ValueError('Quality filter removed every candidate for a required length')
     if max_exceptions is not None and (word_scores is None or preferred_score is None or max_exceptions < 0):
         raise ValueError('Exceptions require scores, preferred_score and a nonnegative limit')
+    if solver not in ('backtracking','csp'):
+        raise ValueError('Unknown solver')
+    if solver=='csp':
+        assigned,nodes=solve_csp(slots,words,word_scores,preferred_score,
+                                 max_exceptions,max_nodes)
+        if assigned is None:
+            raise RuntimeError(f'No fill found after {nodes} attempts; try another grid, dictionary or node limit')
+        board=[list(row) for row in pattern]
+        for i,word in assigned.items():
+            for (r,c),ch in zip(slots[i][4],word):
+                board[r][c]=ch
+        clues={'across':[],'down':[]}
+        for i,(direction,number,r,c,_) in enumerate(slots):
+            clues[direction].append({'number':number,'row':r,'col':c,
+                                     'answer':assigned[i],'text':'[CRYPTIC CLUE REQUIRED]'})
+        return {'size':n,'grid':[''.join(row) for row in board],'clues':clues},nodes
     index=WordIndex(words)
     board=[list(row) for row in pattern];used=set();assigned={};rng=random.Random(seed);nodes=0
     cell_to_slots=defaultdict(list)

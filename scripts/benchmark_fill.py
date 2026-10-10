@@ -50,7 +50,8 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             try:
                 draft,nodes=fill(pattern,dictionary,seed=trial_seed,max_nodes=budget,
                                  word_scores=scores,min_score=exception_floor,
-                                 preferred_score=min_frequency,max_exceptions=max_exceptions)
+                                 preferred_score=min_frequency,max_exceptions=max_exceptions,
+                                 solver='csp')
             except RuntimeError as exc:
                 trials.append({'seed':trial_seed,'status':'unfilled','entries':entry_count,
                                'node_budget':budget,'reason':str(exc),
