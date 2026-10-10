@@ -21,12 +21,17 @@ def review(puzzle):
     if not all_clues:
         issues.append('No clues')
     devices=Counter()
+    answer_set=set()
+    signed=0
     for direction,clue in all_clues:
         ref=f"{clue.get('number','?')} {direction}"
         answer=clue.get('answer','')
         text=clue.get('text','')
         if not isinstance(text,str) or not text.strip() or PLACEHOLDER in text:
             issues.append(f'{ref}: missing cryptic clue')
+        if answer in answer_set:
+            issues.append(f'{ref}: duplicate answer {answer}')
+        answer_set.add(answer)
         if not re.fullmatch('[A-Z]+',answer):
             issues.append(f'{ref}: invalid answer')
         editorial=clue.get('editorial')
@@ -44,9 +49,13 @@ def review(puzzle):
             issues.append(f'{ref}: wordplay not documented')
         if editorial.get('fairness_reviewed') is not True:
             issues.append(f'{ref}: fairness not signed off')
+        else:
+            signed+=1
+        if editorial.get('fairness_reviewed') is True and not editorial.get('reviewer'):
+            issues.append(f'{ref}: signed-off clue lacks reviewer attribution')
     if len(devices)<3 and len(all_clues)>=10:
         issues.append('Insufficient variety of documented clue devices')
-    return {'difficulty':level,'clue_count':len(all_clues),'devices':dict(devices),
+    return {'difficulty':level,'clue_count':len(all_clues),'signed_off_count':signed,'devices':dict(devices),
             'approved':not issues,'issues':issues}
 
 def main():
