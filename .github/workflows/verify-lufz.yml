@@ -96,6 +96,26 @@ jobs:
             --min-frequency 80 --exception-floor 80 \
             --seed 0 --grid-trials 1 --grid-candidates 4 --max-nodes 3000 \
             --report /tmp/lufz-top-csp.json
+      - name: Longer search across four British grid layouts
+        run: |
+          python scripts/benchmark_fill.py --solver backtracking \
+            --scored-dictionary /tmp/lufz-top.tsv \
+            --min-frequency 80 --exception-floor 80 \
+            --seed 0 --grid-trials 4 --grid-candidates 8 --max-nodes 16000 \
+            --report /tmp/lufz-longer-search.json
+      - name: Summarise longer search
+        run: |
+          python - <<'PY'
+          import json,os
+          from pathlib import Path
+          r=json.loads(Path('/tmp/lufz-longer-search.json').read_text())
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as out:
+              out.write('\n## Longer search: 16,000 nodes across four grid patterns\n\n')
+              out.write(f"Overall: **{r['status']}** in {r['elapsed_seconds']} seconds.\n\n")
+              out.write('| Grid seed | Entries | Result | Fill seconds |\n|---:|---:|---|---:|\n')
+              for t in r['trials']:
+                  out.write(f"| {t['seed']} | {t.get('entries','—')} | {t['status']} | {t.get('fill_seconds',t.get('feasibility_seconds','—'))} |\n")
+          PY
       - name: Publish controlled solver comparison
         run: |
           python - <<'PY'
