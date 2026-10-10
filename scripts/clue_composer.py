@@ -6,7 +6,10 @@ import re
 from collections import Counter
 from pathlib import Path
 
-from wordplay_explorer import verify
+try:
+    from .wordplay_explorer import verify
+except ImportError:
+    from wordplay_explorer import verify
 
 FAMILIES = {
     "letter-manipulation": {"anagram", "reversal", "deletion", "substitution"},
