@@ -31,14 +31,14 @@ function exportLexicon(source, destination) {
     rows.push({ word, importance });
     values.push(importance);
   }
-  // Wikipedia importance is a rank-like quantity (lower means more popular).
+  // Wikipedia importance measures occurrences (higher means more popular).
   // Derive a monotonic 0..100 percentile score without assuming rank range.
   const ordered = [...values].sort((a, b) => a - b);
   const rank = new Map();
   ordered.forEach((value, index) => { if (!rank.has(value)) rank.set(value, index); });
   const n = Math.max(1, ordered.length - 1);
   const lines = rows.map(({ word, importance }) => {
-    const score = Math.round(100 * (1 - rank.get(importance) / n));
+    const score = Math.round(100 * rank.get(importance) / n);
     return word.replace(/[\t\r\n]/g, ' ') + '\t' + score;
   });
   fs.writeFileSync(destination, lines.join('\n') + '\n', 'utf8');
