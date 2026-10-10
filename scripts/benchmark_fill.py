@@ -240,12 +240,13 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                        selected_quality['exception_count'] if compliant else -editorial,
                        -selected_quality['mean_frequency'])
             if best_fallback is None or candidate<best_fallback[0]:
-                best_fallback=(candidate,draft,selected_quality)
+                best_fallback=(candidate,draft,selected_quality,selected_seed)
     if best_fallback is not None:
-        _,draft,quality=best_fallback
+        _,draft,quality,winning_grid_seed=best_fallback
         return {'status':'filled_unreviewed','difficulty':difficulty,
                 'dictionary_source':'lufz' if scored_dictionary else 'cmudict',
-                'seed':seed,'dictionary_words':len(words),'eligible_words':eligible,
+                'seed':seed,'selected_grid_seed':winning_grid_seed,
+                'dictionary_words':len(words),'eligible_words':eligible,
                 'allowed_words':allowed,'min_frequency':min_frequency,
                 'exception_floor':exception_floor,'max_exceptions':max_exceptions,
                 'grid_trials':grid_trials,'grid_strategy':grid_strategy,
