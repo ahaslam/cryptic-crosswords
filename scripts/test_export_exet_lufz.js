@@ -8,8 +8,7 @@ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lufz-export-'));
 try {
   const input = path.join(dir, 'source.js');
   const output = path.join(dir, 'export.tsv');
-  fs.writeFileSync(input,
-    "exetLexicon = {lexicon: ['', 'colour', 'King\'s Cross', 'obscurity'], importance: [0, 100, 70, 1]};");
+  fs.writeFileSync(input, `exetLexicon = {lexicon: ['', 'colour', 'King\\'s Cross', 'obscurity'], importance: [0, 100, 70, 1]};`);
   assert.equal(exportLexicon(input, output), 3);
   const scores = new Map(fs.readFileSync(output, 'utf8').trim().split('\n')
     .map(line => { const [word, score] = line.split('\t'); return [word, Number(score)]; }));
