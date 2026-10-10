@@ -18,6 +18,10 @@ class WordplayTests(unittest.TestCase):
         self.assertFalse(verify("SALUTE", "container", "L", container="SAUTE", position=3))
     def test_deletion(self):
         self.assertTrue(verify("CAT", "deletion", "S", container="CAST"))
+    def test_subtractive_anagram(self):
+        self.assertTrue(verify("SPOT", "subtractive-anagram", "LIGHT", container="STOPLIGHT"))
+        self.assertFalse(verify("SPOT", "subtractive-anagram", "LIGHTS", container="STOPLIGHT"))
+        self.assertFalse(verify("SPOT", "subtractive-anagram", "LIGH", container="STOPLIGHT"))
     def test_explore(self):
         found = explore("SPOT", ["TOPS", "POTS", "STONE"])
         self.assertEqual({(x["mechanism"], x["fodder"]) for x in found},
