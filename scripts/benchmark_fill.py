@@ -187,7 +187,6 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                        -selected_quality['mean_frequency'])
             if best_fallback is None or candidate<best_fallback[0]:
                 best_fallback=(candidate,draft,selected_quality)
-            continue
     if best_fallback is not None:
         _,draft,quality=best_fallback
         return {'status':'filled_unreviewed','difficulty':difficulty,
