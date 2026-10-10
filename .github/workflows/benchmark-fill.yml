@@ -69,6 +69,9 @@ jobs:
             --max-exceptions "$MAX_EXCEPTIONS" --exception-floor "$EXCEPTION_FLOOR" \
             --grid-strategy "$GRID_STRATEGY" --grid-candidates "$GRID_CANDIDATES" \
             --report fill-benchmark.json
+      - name: Require completed draft
+        run: |
+          python -c "import json,sys; report=json.load(open('fill-benchmark.json')); print('Benchmark status:', report['status']); sys.exit(0 if report['status']=='filled_unreviewed' else 1)"
       - name: Publish benchmark summary
         if: always()
         run: python scripts/benchmark_summary.py fill-benchmark.json >> "$GITHUB_STEP_SUMMARY"
