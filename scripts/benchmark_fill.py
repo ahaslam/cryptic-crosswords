@@ -15,7 +15,9 @@ from rank_grids import select, metrics
 
 def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
         grid_trials=4, max_exceptions=5, exception_floor=2.0,
-        grid_candidates=8, grid_strategy='ranked', scored_dictionary=None):
+        grid_candidates=8, grid_strategy='ranked', scored_dictionary=None, solver=solver):
+    if solver not in ('backtracking','csp'):
+        raise ValueError('Unknown solver')
     if grid_candidates<1 or grid_strategy not in ('ranked','random'):
         raise ValueError('Invalid grid selection settings')
     if grid_trials<1 or max_nodes<grid_trials:
@@ -126,7 +128,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     'eligible_words':eligible,'allowed_words':allowed,
                     'min_frequency':min_frequency,'exception_floor':exception_floor,
                     'max_exceptions':max_exceptions,'grid_trials':grid_trials,'grid_strategy':grid_strategy,
-                    'grid_candidates':grid_candidates,
+                    'grid_candidates':grid_candidates,'solver':solver,
                     'max_nodes_total':max_nodes,'elapsed_seconds':round(time.monotonic()-start,2),
                     'trials':trials,'draft':draft}
     return {'status':'unfilled','seed':seed,'dictionary_words':len(words),
@@ -148,12 +150,13 @@ def main():
     parser.add_argument('--max-exceptions',type=int,default=5)
     parser.add_argument('--exception-floor',type=float,default=2.0)
     parser.add_argument('--min-frequency',type=float,default=3.0)
+    parser.add_argument('--solver',choices=('backtracking','csp'),default='backtracking')
     parser.add_argument('--scored-dictionary',help='Scored TSV export; uses 0..100 popularity scale')
     parser.add_argument('--report',default='fill-benchmark.json')
     args=parser.parse_args()
     report=run(args.seed,args.max_nodes,args.grid_attempts,args.min_frequency,
                args.grid_trials,args.max_exceptions,args.exception_floor,
-               args.grid_candidates,args.grid_strategy,args.scored_dictionary)
+               args.grid_candidates,args.grid_strategy,args.scored_dictionary,args.solver)
     target=Path(args.report).resolve()
     published=(Path(__file__).resolve().parents[1]/'site'/'puzzles').resolve()
     if target==published or published in target.parents:
