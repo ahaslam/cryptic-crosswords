@@ -1,4 +1,6 @@
 import unittest
+import json
+from pathlib import Path
 from analyse_reference_grids import analyse, inspect_reference
 
 
@@ -22,6 +24,15 @@ class ReferenceGridTests(unittest.TestCase):
         b = analyse({'different': ['.'*15]*15})
         self.assertEqual(a['summary'], b['summary'])
         self.assertEqual(a['reference_count'], 1)
+
+    def test_published_reference_has_expected_structure(self):
+        path = Path(__file__).resolve().parents[1] / 'data' / 'reference-grids.json'
+        references = json.loads(path.read_text(encoding='utf-8'))
+        measured = analyse(references)['grids']['sunday-times-p87']
+        self.assertEqual(measured['entries'], 28)
+        self.assertEqual(measured['max_entry_length'], 10)
+        self.assertTrue(measured['rotationally_symmetric'])
+        self.assertEqual(measured['three_letter_entries'], 0)
 
     def test_empty_references_are_rejected(self):
         with self.assertRaises(ValueError):
