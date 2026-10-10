@@ -26,7 +26,8 @@ def slots_of(grid):
             slots.append((direction,number,r,c,cells))
     return slots
 
-def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=None):
+def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=None,
+         preferred_score=None,max_exceptions=None):
     n=len(pattern)
     if n<3 or any(len(row)!=n or any(ch not in '#.' for ch in row) for row in pattern):
         raise ValueError('Expected square pattern of # and .')
@@ -43,34 +44,48 @@ def fill(pattern,dictionary,seed=0,max_nodes=250000,word_scores=None,min_score=N
                for length,pool in words.items()}
         if any(not words[length] for length in lengths):
             raise ValueError('Quality filter removed every candidate for a required length')
+    if max_exceptions is not None and (word_scores is None or preferred_score is None or max_exceptions < 0):
+        raise ValueError('Exceptions require scores, preferred_score and a nonnegative limit')
     index=WordIndex(words)
     board=[list(row) for row in pattern];used=set();assigned={};rng=random.Random(seed);nodes=0
+    cell_to_slots=defaultdict(list)
+    for j,slot in enumerate(slots):
+        for cell in slot[4]: cell_to_slots[cell].append(j)
+    degree=[len({other for cell in slot[4] for other in cell_to_slots[cell] if other!=j})
+            for j,slot in enumerate(slots)]
+    exceptions_used=0
     def candidates(i):
         cells=slots[i][4]
         return index.candidates(''.join(board[r][c] for r,c in cells),used)
     def solve():
-        nonlocal nodes
+        nonlocal nodes,exceptions_used
         if len(assigned)==len(slots): return True
         if nodes>=max_nodes:return False
         options=[]
         for i in range(len(slots)):
             if i in assigned:continue
             possible=candidates(i)
+            if max_exceptions is not None and exceptions_used >= max_exceptions:
+                possible=[w for w in possible if word_scores.get(w,0)>=preferred_score]
             if not possible:return False
-            options.append((len(possible),i,possible))
-        _,i,possible=min(options,key=lambda x:(x[0],x[1]))
+            options.append((len(possible),-degree[i],i,possible))
+        _,_,i,possible=min(options,key=lambda x:(x[0],x[1],x[2]))
         if word_scores is None:
             rng.shuffle(possible)
         else:
             # Most familiar candidates first; ties stable for reproducible results.
             possible.sort(key=lambda w:(-word_scores.get(w,0),w))
         for word in possible:
+            exception=(max_exceptions is not None and word_scores.get(word,0)<preferred_score)
+            if exception and exceptions_used>=max_exceptions:continue
             nodes+=1;changed=[]
+            if exception:exceptions_used+=1
             for (r,c),ch in zip(slots[i][4],word):
                 if board[r][c]=='.':board[r][c]=ch;changed.append((r,c))
             assigned[i]=word;used.add(word)
             if solve():return True
             used.remove(word);del assigned[i]
+            if exception:exceptions_used-=1
             for r,c in changed:board[r][c]='.'
             if nodes>=max_nodes:break
         return False
