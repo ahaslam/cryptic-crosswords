@@ -81,3 +81,27 @@ No editorial sign-off is implied.
 7. If an entry cannot support an engaging clue, request a new answer/fill.
 
 **Status:** Editorial calibration recorded. No clues approved; do not publish.
+
+## Second editorial pass: constructed cryptic clues
+
+The following candidates have explicit, checkable constructions. They remain
+**unapproved** pending independent assessment of surface, fairness and difficulty.
+
+| Entry | Candidate clue | Exact construction | Assessment |
+|---|---|---|---|
+| 21 Across GOOD (4) | Fine god embracing love (4) | GOD enclosing O (love, tennis) after G: G + O + OD = GOOD. Definition: fine. | Strong concise container with plausible surface |
+| 2 Down SPOT (4) | Place for pots to be rearranged (4) | POTS rearranged (anagram) = SPOT. Definition: place (noun). | Sound, but conspicuous anagram; improve surface |
+| 19 Down BASIL (5) | Herb in scuba silhouettes (5) | scu**BA SIL**houettes contains BASIL consecutively. Definition: herb. | Sound hidden answer; somewhat contrived surface |
+| 14 Down ACT (3) | Perform when cat goes wild (3) | CAT goes wild (anagram) = ACT. Definition: perform. | Sound but mechanically obvious; reject for final puzzle |
+| 23 Across TWO (3) | Pair of 'wot?' in confusion (3) | WOT in confusion (anagram) = TWO. Definition: pair. | Valid letters, strained surface; reject for final puzzle |
+
+These examples demonstrate the review distinction: **letter-perfect is
+necessary but insufficient**. Only GOOD is provisionally worth developing;
+none has been independently signed off.
+
+### Remaining editorial work
+
+Construct fair clues for the long entries, prioritising interesting internal
+letter structure over easy direct definitions. If a long answer cannot be clued
+well, regenerate its crossings and replace it. Do not put any candidate in the
+playable puzzle until the complete set has passed review.
