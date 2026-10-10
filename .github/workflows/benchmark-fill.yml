@@ -107,6 +107,9 @@ jobs:
                   'Full unpublished answer lists are attached as a workflow artifact.']
           with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write('\n'.join(lines)+'\n')
+          for direction in ('across','down'):
+              for clue in reports['accessible'].get('draft',{}).get('clues',{}).get(direction,[]):
+                  print('EDITORIAL ANSWER',direction,clue['number'],clue['answer'])
           print('\n'.join(lines))
           if any(r['status']=='filled_unreviewed' and not r.get('quality_target_met',False) for r in reports.values()):
               print('WARNING: At least one completed fill violates its vocabulary target')
