@@ -120,12 +120,15 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import sys
+          sys.path.insert(0,'scripts')
+          from crossword_lexicon import normalize_answer
           rejected={'LIETO','HADTO','THEREST','INNEED','THEEND','AHOM','SNELL','KEAN','AHERN','HDMI','EST','HASTA','BAUM','ROSEANNE','MURIEL','CASTRO','AMOS','ALI','ESSEN','TRONDHEIM','MISSOURI','CARTER','ADAMS','AMIGA','SPITHEAD','NORTHSEA','FOLLOWUP','ISHTAR','GLEECLUB','GRIMALDI','NON','ARG'}
           rows=Path('/tmp/lufz-top.tsv').read_text().splitlines()
-          kept=[row for row in rows if row.split('\t',1)[0] not in rejected]
+          kept=[row for row in rows if normalize_answer(row.split('\t',1)[0]) not in rejected]
           Path('/tmp/lufz-reviewed.tsv').write_text('\n'.join(kept)+'\n')
           print('Excluded',len(rows)-len(kept),'editorially problematic answers')
-          assert not any(row.split('\t',1)[0] in rejected for row in kept)
+          assert not any(normalize_answer(row.split('\t',1)[0]) in rejected for row in kept)
           assert len(rows)-len(kept)>0, 'Editorial exclusions matched no dictionary entries'
           PY
           python scripts/benchmark_fill.py --solver csp \
@@ -149,7 +152,10 @@ jobs:
           print('QUALITY FILTERED STATUS:',r['status'])
           print(json.dumps(r.get('draft',{}).get('clues',{}),indent=2))
           if r['status']=='filled_unreviewed':
-              allowed={line.split('\t',1)[0] for line in Path('/tmp/lufz-reviewed.tsv').read_text().splitlines()}
+              import sys
+              sys.path.insert(0,'scripts')
+              from crossword_lexicon import normalize_answer
+              allowed={normalize_answer(line.split('\t',1)[0]) for line in Path('/tmp/lufz-reviewed.tsv').read_text().splitlines()}
               answers={clue['answer'] for group in r['draft']['clues'].values() for clue in group}
               excluded=answers-allowed
               assert not excluded, f'Fill used words outside editorial dictionary: {sorted(excluded)}'
