@@ -6,6 +6,7 @@ import random
 import re
 from collections import defaultdict
 from pathlib import Path
+from word_index import WordIndex
 
 def slots_of(grid):
     n=len(grid); numbers={}; slots=[]
@@ -35,11 +36,11 @@ def fill(pattern,dictionary,seed=0,max_nodes=250000):
         word=raw.strip().upper()
         if re.fullmatch('[A-Z]+',word) and len(word) in lengths: words[len(word)].add(word)
     if any(not words[length] for length in lengths): raise ValueError('Dictionary lacks required word lengths')
-    words={length:sorted(group) for length,group in words.items()}
+    index=WordIndex(words)
     board=[list(row) for row in pattern];used=set();assigned={};rng=random.Random(seed);nodes=0
     def candidates(i):
         cells=slots[i][4]
-        return [w for w in words[len(cells)] if w not in used and all(board[r][c] in ('.',w[j]) for j,(r,c) in enumerate(cells))]
+        return index.candidates(''.join(board[r][c] for r,c in cells),used)
     def solve():
         nonlocal nodes
         if len(assigned)==len(slots): return True
