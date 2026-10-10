@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Try multiple 50–55-entry grids with a limited allowance for rarer words.
+"""Find a complete 50–55-entry draft first, then attempt vocabulary improvement.
 
 Requires cmudict and wordfreq. Produces an unreviewed draft, never a public puzzle.
 """
@@ -47,23 +47,61 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
             if not 50<=entry_count<=55:
                 raise AssertionError('Generated grid violates 50–55 entry contract')
             started=time.monotonic()
+            # Phase 1: prove a complete fill exists, without vocabulary constraints.
             try:
-                draft,nodes=fill(pattern,dictionary,seed=trial_seed,max_nodes=budget,
-                                 word_scores=scores,min_score=exception_floor,
-                                 preferred_score=min_frequency,max_exceptions=max_exceptions,
-                                 solver='csp')
+                baseline,feasibility_nodes=fill(
+                    pattern,dictionary,seed=trial_seed,max_nodes=budget,
+                    solver='backtracking')
             except RuntimeError as exc:
                 trials.append({'seed':trial_seed,'status':'unfilled','entries':entry_count,
                                'node_budget':budget,'reason':str(exc),
                                'fill_seconds':round(time.monotonic()-started,2)})
                 continue
-            answers=[c['answer'] for group in draft['clues'].values() for c in group]
-            exceptions=sorted(({'answer':w,'frequency':scores[w]} for w in answers
-                              if scores[w]<min_frequency),key=lambda x:x['frequency'])
+            feasibility_seconds=round(time.monotonic()-started,2)
+            # Phase 2: try a higher-quality fill, but never discard a valid baseline.
+            quality_started=time.monotonic()
+            quality_status='unfilled'
+            quality_nodes=None
+            try:
+                improved,quality_nodes=fill(
+                    pattern,dictionary,seed=trial_seed,max_nodes=budget,
+                    word_scores=scores,min_score=exception_floor,
+                    solver='backtracking')
+                quality_status='filled_unreviewed'
+            except RuntimeError:
+                improved=None
+            quality_seconds=round(time.monotonic()-quality_started,2)
+
+            def assess(draft):
+                answers=[c['answer'] for group in draft['clues'].values() for c in group]
+                exceptions=sorted(
+                    ({'answer':w,'frequency':scores[w]} for w in answers
+                     if scores[w]<min_frequency),
+                    key=lambda x:(x['frequency'],x['answer']))
+                return {'exceptions':exceptions,'exception_count':len(exceptions),
+                        'mean_frequency':round(sum(scores[w] for w in answers)/len(answers),3),
+                        'minimum_frequency':min(scores[w] for w in answers)}
+            baseline_quality=assess(baseline)
+            improved_quality=assess(improved) if improved else None
+            # Fewer uncommon answers wins; then higher mean frequency.
+            selected='baseline'
+            draft=baseline
+            if improved is not None and (
+                improved_quality['exception_count'],-improved_quality['mean_frequency']
+            ) < (baseline_quality['exception_count'],-baseline_quality['mean_frequency']):
+                selected='improved'
+                draft=improved
+            selected_quality=assess(draft)
             trials.append({'seed':trial_seed,'status':'filled_unreviewed',
-                           'entries':entry_count,'nodes':nodes,'exceptions':exceptions,
-                           'mean_frequency':round(sum(scores[w] for w in answers)/len(answers),3),
-                           'fill_seconds':round(time.monotonic()-started,2)})
+                           'entries':entry_count,'feasibility_nodes':feasibility_nodes,
+                           'feasibility_seconds':feasibility_seconds,
+                           'quality_status':quality_status,'quality_nodes':quality_nodes,
+                           'quality_seconds':quality_seconds,
+                           'baseline_quality':baseline_quality,
+                           'improved_quality':improved_quality,
+                           'selected':selected,
+                           'quality_target_met':selected_quality['exception_count']<=max_exceptions,
+                           **selected_quality})
             return {'status':'filled_unreviewed','seed':seed,'dictionary_words':len(words),
                     'eligible_words':eligible,'allowed_words':allowed,
                     'min_frequency':min_frequency,'exception_floor':exception_floor,

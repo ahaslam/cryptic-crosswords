@@ -15,11 +15,11 @@ on:
         required: false
         default: "4"
       max_exceptions:
-        description: "Maximum answers below preferred frequency"
+        description: "Target maximum uncommon answers (reported, not enforced)"
         required: false
         default: "5"
       exception_floor:
-        description: "Absolute minimum frequency for exceptions"
+        description: "Minimum frequency used in quality improvement phase"
         required: false
         default: "2.0"
       max_nodes:
