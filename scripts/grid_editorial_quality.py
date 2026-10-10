@@ -28,3 +28,17 @@ def score_draft(draft):
     return {'score':score,'abstract_admin_count':admin,'function_word_count':fillers,
             'context_review_answers':review,'duplicate_count':duplicates,
             'provisional':True}
+
+def candidate_penalty(word, selected_words):
+    """Soft marginal cost when a fill already contains similar dull entries.
+
+    Used only to order search branches; never excludes an answer.
+    """
+    selected=list(selected_words)
+    if word in ABSTRACT_ADMIN:
+        return 12 * max(0, sum(w in ABSTRACT_ADMIN for w in selected)-1)
+    if word in FUNCTION_WORDS:
+        return 8 * max(0, sum(w in FUNCTION_WORDS for w in selected)-1)
+    if review_signal(word).review_required:
+        return 18
+    return 0
