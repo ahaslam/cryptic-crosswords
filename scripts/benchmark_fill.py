@@ -15,7 +15,7 @@ from rank_grids import select, metrics
 
 def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
         grid_trials=4, max_exceptions=5, exception_floor=2.0,
-        grid_candidates=8, grid_strategy='ranked', scored_dictionary=None, solver='backtracking'):
+        grid_candidates=8, grid_strategy='ranked', scored_dictionary=None, solver=solver):
     if solver not in ('backtracking','csp'):
         raise ValueError('Unknown solver')
     if grid_candidates<1 or grid_strategy not in ('ranked','random'):
@@ -71,7 +71,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                     pattern,dictionary,seed=trial_seed,max_nodes=budget,
                     word_scores=scores if scored_dictionary else None,
                     min_score=exception_floor if scored_dictionary else None,
-                    solver='backtracking')
+                    solver=solver)
             except RuntimeError as exc:
                 trials.append({'seed':trial_seed,'status':'unfilled','entries':entry_count,
                                'node_budget':budget,'selected_grid_seed':selected_seed,
@@ -87,7 +87,7 @@ def run(seed=0, max_nodes=10000, grid_attempts=20000, min_frequency=3.0,
                 improved,quality_nodes=fill(
                     pattern,dictionary,seed=trial_seed,max_nodes=budget,
                     word_scores=scores,min_score=exception_floor,
-                    solver='backtracking')
+                    solver=solver)
                 quality_status='filled_unreviewed'
             except RuntimeError:
                 improved=None
