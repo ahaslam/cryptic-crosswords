@@ -107,6 +107,15 @@ jobs:
                   'Full unpublished answer lists are attached as a workflow artifact.']
           with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write('\n'.join(lines)+'\n')
+          for level,r in reports.items():
+              print('EDITORIAL GRID',level,'selected',r.get('draft',{}).get('grid_editorial_quality'))
+              for trial in r['trials']:
+                  if trial['status']=='filled_unreviewed':
+                      print('EDITORIAL TRIAL',level,
+                            'seed',trial.get('selected_grid_seed'),
+                            'selected',trial.get('selected'),
+                            'baseline',trial.get('baseline_editorial'),
+                            'improved',trial.get('improved_editorial'))
           for direction in ('across','down'):
               for clue in reports['accessible'].get('draft',{}).get('clues',{}).get(direction,[]):
                   print('EDITORIAL ANSWER',direction,clue['number'],clue['answer'])
