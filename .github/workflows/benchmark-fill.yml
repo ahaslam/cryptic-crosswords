@@ -94,20 +94,22 @@ jobs:
           reports={level:json.loads((out/(level+'.json')).read_text())
                    for level in ('accessible','standard','challenging')}
           lines=['## Matched-seed difficulty comparison','',
-                 '| Level | Status | Answers | Mean frequency | Exceptions | Grid seed |',
-                 '|---|---|---:|---:|---:|---:|']
+                 '| Level | Status | Quality target | Answers | Mean frequency | Exceptions | Grid seed |',
+                 '|---|---|---|---:|---:|---:|---:|']
           for level,r in reports.items():
               q=r.get('selected_quality',{})
               draft=r.get('draft',{})
               count=sum(map(len,draft.get('clues',{}).values()))
               seed=next((t.get('selected_grid_seed','—') for t in r['trials']
                          if t['status']=='filled_unreviewed'),'—')
-              lines.append(f"| {level} | {r['status']} | {count} | {q.get('mean_frequency','—')} | {q.get('exception_count','—')} | {seed} |")
+              lines.append(f"| {level} | {r['status']} | {r.get('quality_target_met','—')} | {count} | {q.get('mean_frequency','—')} | {q.get('exception_count','—')} | {seed} |")
           lines+=['','Scores reflect vocabulary popularity, not measured clue difficulty.',
                   'Full unpublished answer lists are attached as a workflow artifact.']
           with open(__import__('os').environ['GITHUB_STEP_SUMMARY'],'a') as f:
               f.write('\n'.join(lines)+'\n')
           print('\n'.join(lines))
+          if any(r['status']=='filled_unreviewed' and not r.get('quality_target_met',False) for r in reports.values()):
+              print('WARNING: At least one completed fill violates its vocabulary target')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
