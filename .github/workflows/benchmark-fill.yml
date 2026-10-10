@@ -100,8 +100,7 @@ jobs:
               q=r.get('selected_quality',{})
               draft=r.get('draft',{})
               count=sum(map(len,draft.get('clues',{}).values()))
-              seed=next((t.get('selected_grid_seed','—') for t in r['trials']
-                         if t['status']=='filled_unreviewed'),'—')
+              seed=r.get('selected_grid_seed','—')
               lines.append(f"| {level} | {r['status']} | {r.get('quality_target_met','—')} | {count} | {q.get('mean_frequency','—')} | {q.get('exception_count','—')} | {seed} |")
           lines+=['','Scores reflect vocabulary popularity, not measured clue difficulty.',
                   'Full unpublished answer lists are attached as a workflow artifact.']
